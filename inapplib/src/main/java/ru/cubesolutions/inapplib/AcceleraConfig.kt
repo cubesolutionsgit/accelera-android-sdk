@@ -3,7 +3,7 @@ package ru.cubesolutions.inapplib
 enum class AcceleraBannerType(val value: String) {
     NOTIFICATION("notification"),
     TOP("top"),
-    CANTER("center"),
+    CENTER("center"),
     FULLSCREEN("fullscreen");
 
     companion object {

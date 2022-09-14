@@ -38,6 +38,8 @@ class AcceleraAPI(
         completion: (JSONObject) -> Unit,
         onError: (Exception) -> Unit,
     ) {
+
+
         scope.launch(Dispatchers.IO) {
             try {
                 // Создать строку JSON с параметрами
