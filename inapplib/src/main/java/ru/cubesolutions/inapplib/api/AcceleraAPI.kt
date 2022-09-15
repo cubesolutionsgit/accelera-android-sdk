@@ -1,9 +1,9 @@
 package ru.cubesolutions.inapplib.api
 
-import android.util.Log
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import ru.cubesolutions.inapplib.model.AcceleraConfig
+import ru.cubesolutions.inapplib.utils.LogUtils
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
@@ -26,7 +26,7 @@ class AcceleraAPI(
 
         const val REQUEST_QUERY_PREFIX = "?id="
 
-        const val LOG_TAG_ACCELERA_API = "TAG_ACCELERA_API"
+        const val LOG_TAG_ACCELERA_API = "IN_APP_ACCELERA_API"
     }
 
     private val job = Job()
@@ -38,7 +38,7 @@ class AcceleraAPI(
         completion: (JSONObject) -> Unit,
         onError: (Exception) -> Unit,
     ) {
-
+        LogUtils.info(LOG_TAG_ACCELERA_API, "logEvent data - $data")
 
         scope.launch(Dispatchers.IO) {
             try {
@@ -65,13 +65,24 @@ class AcceleraAPI(
                     val response = httpURLConnection.inputStream.bufferedReader().use {
                         it.readText()
                     }  // по умолчанию UTF-8
+
+                    // Формируем JSON файл из ответа сервера
                     val jsonObject = JSONObject(response)
+                    LogUtils.info(
+                        LOG_TAG_ACCELERA_API,
+                        "logEvent jsonObject - $jsonObject"
+                    )
+
                     // Вызываем колбэк с результатом
                     completion.invoke(jsonObject)
-                    Log.d(LOG_TAG_ACCELERA_API, response)
                 } else {
+                    LogUtils.error(
+                        LOG_TAG_ACCELERA_API,
+                        "Response code - $responseCode and not 200"
+                    )
+
+                    // Вызываем колбэк с ошибкой
                     onError.invoke(Exception("Response code - $responseCode and not 200"))
-                    Log.e(LOG_TAG_ACCELERA_API, responseCode.toString())
                 }
             } catch (exception: Exception) {
                 exception.printStackTrace()
@@ -85,6 +96,8 @@ class AcceleraAPI(
         completion: (JSONObject) -> Unit,
         onError: (Exception) -> Unit,
     ) {
+        LogUtils.info(LOG_TAG_ACCELERA_API, "loadBanner")
+
         scope.launch(Dispatchers.IO) {
             try {
                 val baseUrl: StringBuilder = StringBuilder()
@@ -108,16 +121,25 @@ class AcceleraAPI(
                     val response = httpURLConnection.inputStream.bufferedReader().use {
                         it.readText()
                     }  // по умолчанию UTF-8
+
+                    // Формируем JSON файл из ответа сервера
                     val jsonObject = JSONObject(response)
+                    LogUtils.info(LOG_TAG_ACCELERA_API, "loadBanner jsonObject - $jsonObject")
+
                     // Вызываем колбэк с результатом
                     completion.invoke(jsonObject)
-                    Log.d(LOG_TAG_ACCELERA_API, response)
                 } else {
+                    LogUtils.error(
+                        LOG_TAG_ACCELERA_API,
+                        "Response code - $responseCode and not 200"
+                    )
                     onError.invoke(Exception("Response code - $responseCode and not 200"))
-                    Log.e(LOG_TAG_ACCELERA_API, responseCode.toString())
                 }
             } catch (exception: Exception) {
-                exception.printStackTrace()
+                LogUtils.error(
+                    LOG_TAG_ACCELERA_API,
+                    "loadBanner - " + exception.localizedMessage
+                )
                 // Вызываем колбэк с ошибкой
                 onError.invoke(exception)
             }
@@ -125,10 +147,13 @@ class AcceleraAPI(
     }
 
     private fun getJsonParamsLoadBanner(data: Map<String, Any>): String {
+        LogUtils.info(LOG_TAG_ACCELERA_API, "getJsonParamsLoadBanner data - $data")
+
         // Создаем JSON с помощью JSONObject
         val jsonObject = JSONObject()
         jsonObject.put(REQUEST_JSON_ID, acceleraConfig.userId)
         jsonObject.put(REQUEST_JSON_DATA, data)
+
         // Преобразовываем JSONObject в строку
         return jsonObject.toString()
     }

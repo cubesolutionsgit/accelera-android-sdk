@@ -1,6 +1,5 @@
 package ru.cubesolutions.inapplib.model
 
-
 /**
  * Класс с конфигурацией работы Accelera
  *
