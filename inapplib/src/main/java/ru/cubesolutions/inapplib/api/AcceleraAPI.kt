@@ -3,7 +3,7 @@ package ru.cubesolutions.inapplib.api
 import android.util.Log
 import kotlinx.coroutines.*
 import org.json.JSONObject
-import ru.cubesolutions.inapplib.AcceleraConfig
+import ru.cubesolutions.inapplib.model.AcceleraConfig
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL

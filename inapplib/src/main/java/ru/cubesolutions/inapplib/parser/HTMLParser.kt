@@ -18,17 +18,21 @@ class HTMLParser {
         onError: (String) -> Unit,
     ) {
         Log.d(LOG_TAG_HTML_PARSER, html)
-        var newHtml = html
+        try {
+            var newHtml = html
 
-        // TODO: use regexp
-        tagsToReplace.forEach { tag ->
-            newHtml = newHtml.replace("<\\($tag)>", "!@#\\($tag)!@#")
+            // TODO: use regexp
+            tagsToReplace.forEach { tag ->
+                newHtml = newHtml.replace("<\\($tag)>", "!@#\\($tag)!@#")
+            }
+
+            Log.d(LOG_TAG_HTML_PARSER, newHtml)
+
+            val parseData = Jsoup.parse(newHtml)
+
+            completion.invoke(parseData)
+        } catch (exception: Exception) {
+            onError.invoke(exception.message.toString())
         }
-
-        Log.d(LOG_TAG_HTML_PARSER, newHtml)
-
-        val parseData = Jsoup.parse(newHtml)
-
-        completion.invoke(parseData)
     }
 }

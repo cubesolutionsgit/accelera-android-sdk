@@ -1,1 +1,0 @@
-package ru.cubesolutions.inapplib.view.views

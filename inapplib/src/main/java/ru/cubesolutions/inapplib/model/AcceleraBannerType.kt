@@ -1,5 +1,10 @@
-package ru.cubesolutions.inapplib
+package ru.cubesolutions.inapplib.model
 
+/**
+ * Тип баннера для отображения на экране
+ *
+ * @param value значение которые приходят с сервера
+ */
 enum class AcceleraBannerType(val value: String) {
     NOTIFICATION("notification"),
     TOP("top"),
@@ -12,5 +17,3 @@ enum class AcceleraBannerType(val value: String) {
         }
     }
 }
-
-data class AcceleraConfig(val token: String, val url: String, val userId: String)
