@@ -3,6 +3,7 @@ package ru.cubesolutions.zvukinapp
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import ru.cubesolutions.inapplib.Accelera
@@ -28,6 +29,15 @@ class MainActivity : AppCompatActivity(), AcceleraDelegate {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        initLibrary()
+
+        val buttonBanner = findViewById<Button>(R.id.button_load_banner)
+        buttonBanner.setOnClickListener {
+            loadBanner()
+        }
+    }
+
+    private fun initLibrary() {
         accelera = AcceleraLib(
             config = AcceleraConfig(
                 token = TEST_TOKEN,
@@ -36,7 +46,10 @@ class MainActivity : AppCompatActivity(), AcceleraDelegate {
             )
         )
         accelera?.delegate = WeakReference(this)
-        accelera?.loadBanner()
+    }
+
+    private fun loadBanner() {
+        accelera?.loadBanner(this)
     }
 
     override fun bannerViewReady(bannerView: View, type: AcceleraBannerType) {

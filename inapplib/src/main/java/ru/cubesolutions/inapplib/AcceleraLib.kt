@@ -1,5 +1,6 @@
 package ru.cubesolutions.inapplib
 
+import android.content.Context
 import android.view.View
 import kotlinx.coroutines.*
 import ru.cubesolutions.inapplib.api.AcceleraAPI
@@ -35,6 +36,10 @@ class AcceleraLib(config: AcceleraConfig) : AcceleraViewDelegate, Accelera {
     // Интерфейс для получения данных из Accelera
     override var delegate: WeakReference<AcceleraDelegate?>? = null
 
+    init {
+        viewController.delegate = WeakReference(this)
+    }
+
     private val job = Job()
     private val name = CoroutineName("in app accelera scope")
     private val scope: CoroutineScope = CoroutineScope(job + name + Dispatchers.IO)
@@ -54,7 +59,7 @@ class AcceleraLib(config: AcceleraConfig) : AcceleraViewDelegate, Accelera {
         })
     }
 
-    override fun loadBanner() {
+    override fun loadBanner(context: Context) {
         LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner")
         this.api.loadBanner({ jsonObject ->
             LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner jsonObject - $jsonObject")
@@ -85,7 +90,11 @@ class AcceleraLib(config: AcceleraConfig) : AcceleraViewDelegate, Accelera {
 
             // Все представления будут создаваться в этом потоке
             scope.launch {
-                viewController.create(html = html, bannerType = bannerType)
+                viewController.create(
+                    context = context,
+                    html = html,
+                    bannerType = bannerType
+                )
             }
         }, { exception ->
             LogUtils.error(

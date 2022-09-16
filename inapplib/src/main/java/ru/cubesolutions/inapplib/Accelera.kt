@@ -1,5 +1,6 @@
 package ru.cubesolutions.inapplib
 
+import android.content.Context
 import java.lang.ref.WeakReference
 
 /**
@@ -17,5 +18,5 @@ interface Accelera {
     /**
      * Начать загрузку баннера
      */
-    fun loadBanner()
+    fun loadBanner(context: Context)
 }
