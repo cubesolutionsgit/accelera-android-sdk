@@ -1,16 +1,15 @@
 package ru.cubesolutions.inapplib.view
 
 import android.content.Context
-import android.graphics.Color
 import android.view.View
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.widget.LinearLayout
+import android.view.ViewGroup
 import org.jsoup.nodes.Element
 import ru.cubesolutions.inapplib.model.AcceleraBannerType
 import ru.cubesolutions.inapplib.parser.HTMLParser
 import ru.cubesolutions.inapplib.utils.LogUtils
+import ru.cubesolutions.inapplib.utils.ViewUtils
+import ru.cubesolutions.inapplib.view.views.*
 import java.lang.ref.WeakReference
-import java.util.*
 
 class AcceleraBannerViewController {
 
@@ -22,8 +21,10 @@ class AcceleraBannerViewController {
 
     var delegate: WeakReference<AcceleraViewDelegate?>? = null
 
-    private var parentView: LinearLayout? = null
-    private var previouslyView: View? = null
+    private var view: View? = null
+
+    private var parsingParents = mutableListOf<AcceleraAbstractView>()
+    private var topView: AcceleraAbstractView? = null
 
     private var isLoading = false
 
@@ -46,35 +47,17 @@ class AcceleraBannerViewController {
             // Флаг о том, что работа над созданием view началась
             isLoading = true
 
-            document.allElements.forEach {
-                val tagName = it.tagName()
-                LogUtils.info(TAG_IN_APP_BANNER_VIEW, "create tagName - $tagName")
-                val size = it.allElements.size
-                LogUtils.info(TAG_IN_APP_BANNER_VIEW, "create allElements size - $size")
-                val attribute = it.attr("href")
-                LogUtils.info(TAG_IN_APP_BANNER_VIEW, "create attribute - $attribute")
-                val fontSize = it.attr("font-size")
-                LogUtils.info(TAG_IN_APP_BANNER_VIEW, "create fontSize - $fontSize")
-                val width = it.attr("width")
-                LogUtils.info(TAG_IN_APP_BANNER_VIEW, "create width - $width")
-                val level = it.attr("level")
-                LogUtils.info(TAG_IN_APP_BANNER_VIEW, "create level - $level")
-                val color = it.attr("color")
-                LogUtils.info(TAG_IN_APP_BANNER_VIEW, "create color - $color")
-                val src = it.attr("src")
-                LogUtils.info(TAG_IN_APP_BANNER_VIEW, "create src - $src")
-                val margin = it.attr("margin")
-                LogUtils.info(TAG_IN_APP_BANNER_VIEW, "create src - $margin")
-                val backgroundColor = it.attr("background-color")
-                LogUtils.info(TAG_IN_APP_BANNER_VIEW, "create backgroundColor - $backgroundColor")
+            parseElement(
+                context = context,
+                element = document,
+            )
 
-                createView(
-                    context = context,
-                    element = it,
-                )
-            }
-            if (parentView != null) {
-                delegate?.get()?.onReady(view = parentView!!, type = bannerType)
+            render(
+                context = context
+            )
+
+            if (view != null) {
+                delegate?.get()?.onReady(view = view!!, type = bannerType)
             } else {
                 delegate?.get()?.onError("View was not created properly")
             }
@@ -90,66 +73,123 @@ class AcceleraBannerViewController {
         LogUtils.info(TAG_IN_APP_BANNER_VIEW, "clear")
 
         // Очистка данных в контроллере
-        this.parentView = null
-        this.previouslyView = null
+        this.view = null
+        this.parsingParents.clear()
         this.bannerType = AcceleraBannerType.CENTER
+    }
+
+    private fun parseElement(
+        context: Context,
+        element: Element,
+    ): AcceleraAbstractView? {
+        val view = createView(context, element)
+
+        view?.let {
+            parsingParents.lastOrNull()?.descendents?.add(it)
+            parsingParents.add(it)
+        }
+
+        element.children().forEach { child ->
+            parseElement(
+                context = context,
+                element = child,
+            )
+        }
+
+        if (view != null) {
+            // assume that we can only have one top element (re-body)
+            if (parsingParents.size == 1) {
+                topView = parsingParents.firstOrNull()
+            }
+            parsingParents.removeLastOrNull()
+        }
+
+        return view
+    }
+
+    private fun render(context: Context) {
+        if (topView == null) {
+            return
+        }
+
+        val superview = ViewUtils.getSuperLinearLayout(context)
+        this.view = superview
+
+        //TODO Added listener
+//        superview.delegate = self
+
+        topView?.view?.let {
+            superview.addView(it)
+        }
+
+        topView?.descendents?.forEach { child ->
+            renderView(view = child, parent = topView)
+        }
+    }
+
+    private fun renderView(view: AcceleraAbstractView?, parent: AcceleraAbstractView?) {
+        val parentView = parent?.view
+        if (parentView is ViewGroup) {
+            parentView.addView(view?.view)
+        }
+
+        view?.descendents?.forEach { child ->
+            renderView(view = child, parent = view)
+        }
     }
 
     private fun createView(
         context: Context,
         element: Element,
-    ) {
+    ): AcceleraAbstractView? {
         LogUtils.info(TAG_IN_APP_BANNER_VIEW, "createView element - $element")
 
         // Провеярем tag распарсенного элемента HTML
         when (element.tagName()) {
             "re-body" -> {
-                // Создали view из тега re-body - это верхнеуровневый view
-                val linLayout = LinearLayout(context)
-                val backgroundColor = element.attr("background-color")
-                val color = Color.parseColor(backgroundColor)
-                linLayout.setBackgroundColor(color)
-                linLayout.layoutParams = LinearLayout.LayoutParams(
-                    MATCH_PARENT,
-                    MATCH_PARENT
+                return AcceleraBlock(
+                    context = context,
+                    element = element,
                 )
-                val uuidFromElement = UUID.nameUUIDFromBytes(element.toString().toByteArray())
-                linLayout.tag = uuidFromElement
-                // Если родительского view не существует, то считаем, что созданный view родительский
-                if (parentView == null) {
-                    parentView = linLayout
-                } else {
-                    // Если внутри элемента, находятся еще элементы, то считаем, что временно
-                    // сохраняем view в контроллер, а сам созданный элемент добавляем
-                    if (element.allElements.size > 1 && previouslyView == null) {
-                        previouslyView = linLayout
-                        parentView?.let {
-                            it.addView(previouslyView)
-                        }
-                    } else if (previouslyView != null && previouslyView is LinearLayout) {
-                        (previouslyView as? LinearLayout)?.let {
-                            it.addView(linLayout)
-                        }
-                    }
-                }
             }
             "re-main" -> {
-
+                return AcceleraBlock(
+                    context = context,
+                    element = element,
+                )
             }
             "re-block" -> {
-
+                return AcceleraBlock(
+                    context = context,
+                    element = element,
+                )
             }
             "re-heading" -> {
-
+                return AcceleraLabel(
+                    context = context,
+                    element = element,
+                )
             }
             "re-text" -> {
-
+                return AcceleraLabel(
+                    context = context,
+                    element = element,
+                )
             }
             "re-image" -> {
-
+                return AcceleraImageView(
+                    context = context,
+                    element = element,
+                )
             }
             "re-button" -> {
-
+                return AcceleraButton(
+                    context = context,
+                    element = element,
+                )
+            }
+            else -> {
+                return null
             }
         }
     }
