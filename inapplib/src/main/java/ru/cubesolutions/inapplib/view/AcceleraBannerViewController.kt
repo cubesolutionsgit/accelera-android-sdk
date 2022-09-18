@@ -186,6 +186,9 @@ class AcceleraBannerViewController {
                 return AcceleraButton(
                     context = context,
                     element = element,
+                    action = {
+                        delegate?.get()?.onAction(it)
+                    }
                 )
             }
             else -> {
