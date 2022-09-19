@@ -7,5 +7,6 @@ object ConstUtils {
     const val TAG_COLOR = "color"
     const val TAG_BACKGROUND_COLOR = "background-color"
     const val TAG_HREF = "href"
+    const val TAG_MARGIN = "margin"
     const val TAG_FONT_SIZE = "font-size"
 }

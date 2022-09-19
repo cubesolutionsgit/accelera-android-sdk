@@ -15,6 +15,7 @@ import ru.cubesolutions.inapplib.utils.ConstUtils.TAG_BACKGROUND_COLOR
 import ru.cubesolutions.inapplib.utils.ConstUtils.TAG_COLOR
 import ru.cubesolutions.inapplib.utils.ConstUtils.TAG_FONT_SIZE
 import ru.cubesolutions.inapplib.utils.ConstUtils.TAG_HREF
+import ru.cubesolutions.inapplib.utils.ConstUtils.TAG_MARGIN
 import java.util.*
 
 class AcceleraButton(
@@ -58,6 +59,28 @@ class AcceleraButton(
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
         layoutParams.gravity = Gravity.CENTER
+
+        try {
+            val margin = element.attr(TAG_MARGIN)
+            if (margin.isNotEmpty()) {
+                val values = margin.split(" ").map { value ->
+                    value.filter { it.isDigit() }.toInt()
+                }
+                val top = values.getOrNull(0) ?: 0
+                val right = values.getOrNull(1) ?: top
+                val bottom = values.getOrNull(2) ?: top
+                val left = values.getOrNull(3) ?: right
+
+                layoutParams.setMargins(
+                    dpAsPixels(left),
+                    dpAsPixels(top),
+                    dpAsPixels(right),
+                    dpAsPixels(bottom)
+                )
+            }
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+        }
 
         getViewButton()?.layoutParams = layoutParams
     }
