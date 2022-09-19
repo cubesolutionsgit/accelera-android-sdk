@@ -10,6 +10,7 @@ import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
 import org.jsoup.nodes.Element
 import ru.cubesolutions.inapplib.utils.ConstUtils.DEFAULT_BLUE_COLOR
+import ru.cubesolutions.inapplib.utils.ConstUtils.DEFAULT_WHITE_COLOR
 import ru.cubesolutions.inapplib.utils.ConstUtils.TAG_BACKGROUND_COLOR
 import ru.cubesolutions.inapplib.utils.ConstUtils.TAG_COLOR
 import ru.cubesolutions.inapplib.utils.ConstUtils.TAG_FONT_SIZE
@@ -27,6 +28,7 @@ class AcceleraButton(
 
     companion object {
         const val DEFAULT_BACKGROUND_COLOR = DEFAULT_BLUE_COLOR
+        const val DEFAULT_TEXT_COLOR = DEFAULT_WHITE_COLOR
     }
 
     private var onClickButton: (String) -> Unit = action
@@ -43,10 +45,10 @@ class AcceleraButton(
         setLayoutParams()
         setPadding()
         setUUID()
-        setRounderCorner()
         setText()
         setTextColor()
         setFontSize()
+        setRounderCorner()
         setOnClickListener()
     }
 
@@ -77,11 +79,7 @@ class AcceleraButton(
 
     private fun setTextColor() {
         try {
-            val color = element.attr(TAG_COLOR)
-            if (color.isNotEmpty()) {
-                val parseColor = Color.parseColor(color)
-                getViewButton()?.setTextColor(parseColor)
-            }
+            getViewButton()?.setTextColor(getColor())
         } catch (exception: Exception) {
             exception.printStackTrace()
         }
@@ -143,6 +141,21 @@ class AcceleraButton(
                 Color.parseColor(backgroundColor)
             } else {
                 Color.parseColor(DEFAULT_BACKGROUND_COLOR)
+            }
+            parseColor
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+            Color.parseColor(DEFAULT_BACKGROUND_COLOR)
+        }
+    }
+
+    private fun getColor(): Int {
+        return try {
+            val color = element.attr(TAG_COLOR)
+            val parseColor = if (color.isNotEmpty()) {
+                Color.parseColor(color)
+            } else {
+                Color.parseColor(DEFAULT_TEXT_COLOR)
             }
             parseColor
         } catch (exception: Exception) {
