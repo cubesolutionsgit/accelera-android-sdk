@@ -27,6 +27,29 @@ object ViewUtils {
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
+
+        try {
+            val margin = element.attr(ConstUtils.TAG_MARGIN)
+            if (margin.isNotEmpty()) {
+                val values = margin.split(" ").map { value ->
+                    value.filter { it.isDigit() }.toInt()
+                }
+                val top = values.getOrNull(0) ?: 0
+                val right = values.getOrNull(1) ?: top
+                val bottom = values.getOrNull(2) ?: top
+                val left = values.getOrNull(3) ?: right
+
+                layoutParams.setMargins(
+                    (left.toPx(context)),
+                    (top.toPx(context)),
+                    (right.toPx(context)),
+                    (bottom.toPx(context))
+                )
+            }
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+        }
+
         layoutParams.gravity = Gravity.CENTER
         imageView.layoutParams = layoutParams
         try {
@@ -35,6 +58,7 @@ object ViewUtils {
                 val newUrl = URL(urlImage)
                 val bitmap = BitmapFactory.decodeStream(newUrl.openConnection().getInputStream())
                 imageView.scaleType = ImageView.ScaleType.FIT_CENTER
+                imageView.adjustViewBounds = true
                 imageView.setImageBitmap(bitmap)
             }
         } catch (exception: Exception) {
@@ -71,50 +95,75 @@ object ViewUtils {
         } catch (exception: Exception) {
             exception.printStackTrace()
         }
-        textView.layoutParams = LinearLayout.LayoutParams(
+        val layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
+
+        try {
+            val margin = element.attr(ConstUtils.TAG_MARGIN)
+            if (margin.isNotEmpty()) {
+                val values = margin.split(" ").map { value ->
+                    value.filter { it.isDigit() }.toInt()
+                }
+                val top = values.getOrNull(0) ?: 0
+                val right = values.getOrNull(1) ?: top
+                val bottom = values.getOrNull(2) ?: top
+                val left = values.getOrNull(3) ?: right
+
+                layoutParams.setMargins(
+                    (left.toPx(context)),
+                    (top.toPx(context)),
+                    (right.toPx(context)),
+                    (bottom.toPx(context))
+                )
+            }
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+        }
+
+        textView.layoutParams = layoutParams
+
+        textView.gravity =  Gravity.CENTER
+
         try {
             val textData = element.childNode(0).toString()
             textView.text = textData
         } catch (exception: Exception) {
             exception.printStackTrace()
         }
-        val uuidFromElement = UUID.nameUUIDFromBytes(element.toString().toByteArray())
-        textView.tag = uuidFromElement
 
-        return textView
-    }
-
-    fun getButton(
-        context: Context,
-        element: Element,
-    ): Button {
-        val button = Button(context)
         try {
-            val color = element.attr("color")
-            if (color.isNotEmpty()) {
-                val parseColor = Color.parseColor(color)
-                button.setTextColor(parseColor)
+            val fontLevel = element.attr(ConstUtils.TAG_FONT_LEVEL)
+            if (fontLevel.isNotEmpty()) {
+                val result = fontLevel.filter { it.isDigit() }.toInt()
+                when (result) {
+                    1 -> {
+                        textView.textSize = 32.toFloat()
+                    }
+                    2 -> {
+                        textView.textSize = 28.toFloat()
+                    }
+                    3 -> {
+                        textView.textSize = 20.toFloat()
+                    }
+                    4 -> {
+                        textView.textSize = 18.toFloat()
+                    }
+                    else -> {
+                        textView.textSize = 16.toFloat()
+                    }
+                }
             }
         } catch (exception: Exception) {
             exception.printStackTrace()
         }
-        button.layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-        try {
-            val textData = element.childNode(0).toString()
-            button.text = textData
-        } catch (exception: Exception) {
-            exception.printStackTrace()
-        }
-        val uuidFromElement = UUID.nameUUIDFromBytes(element.toString().toByteArray())
-        button.tag = uuidFromElement
 
-        return button
+
+        val uuidFromElement = UUID.nameUUIDFromBytes(element.toString().toByteArray())
+        textView.tag = uuidFromElement
+
+        return textView
     }
 
     fun getLinearLayout(
@@ -133,10 +182,57 @@ object ViewUtils {
         } catch (exception: Exception) {
             exception.printStackTrace()
         }
-        linLayout.layoutParams = LinearLayout.LayoutParams(
+        val layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
+
+        try {
+            val margin = element.attr(ConstUtils.TAG_MARGIN)
+            if (margin.isNotEmpty()) {
+                val values = margin.split(" ").map { value ->
+                    value.filter { it.isDigit() }.toInt()
+                }
+                val top = values.getOrNull(0) ?: 0
+                val right = values.getOrNull(1) ?: top
+                val bottom = values.getOrNull(2) ?: top
+                val left = values.getOrNull(3) ?: right
+
+                layoutParams.setMargins(
+                    (left.toPx(context)),
+                    (top.toPx(context)),
+                    (right.toPx(context)),
+                    (bottom.toPx(context))
+                )
+            }
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+        }
+
+        try {
+            val padding = element.attr(ConstUtils.TAG_PADDING)
+            if (padding.isNotEmpty()) {
+                val values = padding.split(" ").map { value ->
+                    value.filter { it.isDigit() }.toInt()
+                }
+                val top = values.getOrNull(0) ?: 0
+                val right = values.getOrNull(1) ?: top
+                val bottom = values.getOrNull(2) ?: top
+                val left = values.getOrNull(3) ?: right
+
+                linLayout.setPadding(
+                    (left.toPx(context)),
+                    (top.toPx(context)),
+                    (right.toPx(context)),
+                    (bottom.toPx(context))
+                )
+            }
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+        }
+
+        linLayout.layoutParams = layoutParams
+
         linLayout.orientation = VERTICAL
         val uuidFromElement = UUID.nameUUIDFromBytes(element.toString().toByteArray())
         linLayout.tag = uuidFromElement
