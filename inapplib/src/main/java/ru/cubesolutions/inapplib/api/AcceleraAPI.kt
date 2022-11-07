@@ -39,7 +39,7 @@ class AcceleraAPI(
 
     fun logEvent(
         data: Map<String, Any>,
-        completion: (JSONObject) -> Unit,
+        completion: (String) -> Unit,
         onError: (Exception) -> Unit,
     ) {
         LogUtils.info(LOG_TAG_ACCELERA_API, "logEvent data - $data")
@@ -80,15 +80,8 @@ class AcceleraAPI(
                         msg = "logEvent response - $response"
                     )
 
-                    // Формируем JSON файл из ответа сервера
-                    val jsonObject = JSONObject(response)
-                    LogUtils.info(
-                        tag = LOG_TAG_ACCELERA_API,
-                        msg = "logEvent jsonObject - $jsonObject"
-                    )
-
                     // Вызываем колбэк с результатом
-                    completion.invoke(jsonObject)
+                    completion.invoke(response)
                 } else {
                     LogUtils.error(
                         tag = LOG_TAG_ACCELERA_API,
