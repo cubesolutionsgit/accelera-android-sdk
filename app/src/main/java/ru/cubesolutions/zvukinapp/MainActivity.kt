@@ -33,7 +33,12 @@ class MainActivity : AppCompatActivity(), AcceleraDelegate {
 
         val buttonBanner = findViewById<Button>(R.id.button_load_banner)
         buttonBanner.setOnClickListener {
-            loadBanner()
+            loadBannerTest()
+        }
+
+        val buttonLogEvent = findViewById<Button>(R.id.button_log_event)
+        buttonLogEvent.setOnClickListener {
+            logEventTest()
         }
     }
 
@@ -48,8 +53,16 @@ class MainActivity : AppCompatActivity(), AcceleraDelegate {
         accelera?.delegate = WeakReference(this)
     }
 
-    private fun loadBanner() {
+    private fun loadBannerTest() {
         accelera?.loadBanner(this)
+    }
+
+    private fun logEventTest() {
+        accelera?.logEvent(
+            mapOf(
+                "OFFER_TYPE_CD" to "GP TopUP"
+            )
+        )
     }
 
     override fun bannerViewReady(bannerView: View, type: AcceleraBannerType) {

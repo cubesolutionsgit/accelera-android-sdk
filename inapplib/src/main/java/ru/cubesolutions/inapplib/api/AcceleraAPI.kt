@@ -7,6 +7,7 @@ import ru.cubesolutions.inapplib.utils.LogUtils
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
+import javax.net.ssl.HttpsURLConnection
 
 class AcceleraAPI(
     private val acceleraConfig: AcceleraConfig,
@@ -14,6 +15,7 @@ class AcceleraAPI(
 
     companion object {
         const val PATH_ZVUK_TEMPLATE = "/zvuk/template"
+        const val PATH_EVENTS_EVENT = "/events/event"
         const val REQUEST_JSON_ID = "id"
         const val REQUEST_JSON_DATA = "data"
         const val REQUEST_METHOD_GET = "GET"
@@ -25,6 +27,8 @@ class AcceleraAPI(
         const val HEADER_AUTH_KEY = "Authorization"
 
         const val REQUEST_QUERY_PREFIX = "?id="
+
+        const val HTTPS_TEMPLATE = "https://"
 
         const val LOG_TAG_ACCELERA_API = "IN_APP_ACCELERA_API"
     }
@@ -45,40 +49,50 @@ class AcceleraAPI(
                 // Создать строку JSON с параметрами
                 val jsonObjectString = getJsonParamsLoadBanner(data)
 
-                val url = URL(acceleraConfig.url + PATH_ZVUK_TEMPLATE)
-                val httpURLConnection = url.openConnection() as HttpURLConnection
-                httpURLConnection.requestMethod = REQUEST_METHOD_POST
-                httpURLConnection.setRequestProperty(HEADER_AUTH_KEY, acceleraConfig.token)
-                httpURLConnection.setRequestProperty(HEADER_TYPE_KEY, HEADER_TYPE_VALUE)
-                httpURLConnection.setRequestProperty(HEADER_ACCEPT_KEY, HEADER_ACCEPT_VALUE)
-                httpURLConnection.doInput = true
-                httpURLConnection.doOutput = true
+                val url = URL(acceleraConfig.url + PATH_EVENTS_EVENT)
+
+                val urlConnection = if (acceleraConfig.url.contains(HTTPS_TEMPLATE)) {
+                    url.openConnection() as HttpsURLConnection
+                } else {
+                    url.openConnection() as HttpURLConnection
+                }
+
+                urlConnection.requestMethod = REQUEST_METHOD_POST
+                urlConnection.setRequestProperty(HEADER_AUTH_KEY, acceleraConfig.token)
+                urlConnection.setRequestProperty(HEADER_TYPE_KEY, HEADER_TYPE_VALUE)
+                urlConnection.setRequestProperty(HEADER_ACCEPT_KEY, HEADER_ACCEPT_VALUE)
+                urlConnection.doInput = true
+                urlConnection.doOutput = true
 
                 // Отправляем JSON, который мы создали
-                val outputStreamWriter = OutputStreamWriter(httpURLConnection.outputStream)
+                val outputStreamWriter = OutputStreamWriter(urlConnection.outputStream)
                 outputStreamWriter.write(jsonObjectString)
                 outputStreamWriter.flush()
 
                 // Проверяем успешно ли установлено соединение
-                val responseCode = httpURLConnection.responseCode
+                val responseCode = urlConnection.responseCode
                 if (responseCode == HttpURLConnection.HTTP_OK) {
-                    val response = httpURLConnection.inputStream.bufferedReader().use {
+                    val response = urlConnection.inputStream.bufferedReader().use {
                         it.readText()
                     }  // по умолчанию UTF-8
+                    LogUtils.info(
+                        tag = LOG_TAG_ACCELERA_API,
+                        msg = "logEvent response - $response"
+                    )
 
                     // Формируем JSON файл из ответа сервера
                     val jsonObject = JSONObject(response)
                     LogUtils.info(
-                        LOG_TAG_ACCELERA_API,
-                        "logEvent jsonObject - $jsonObject"
+                        tag = LOG_TAG_ACCELERA_API,
+                        msg = "logEvent jsonObject - $jsonObject"
                     )
 
                     // Вызываем колбэк с результатом
                     completion.invoke(jsonObject)
                 } else {
                     LogUtils.error(
-                        LOG_TAG_ACCELERA_API,
-                        "Response code - $responseCode and not 200"
+                        tag = LOG_TAG_ACCELERA_API,
+                        msg = "Response code - $responseCode and not 200"
                     )
 
                     // Вызываем колбэк с ошибкой
@@ -96,7 +110,10 @@ class AcceleraAPI(
         completion: (JSONObject) -> Unit,
         onError: (Exception) -> Unit,
     ) {
-        LogUtils.info(LOG_TAG_ACCELERA_API, "loadBanner")
+        LogUtils.info(
+            tag = LOG_TAG_ACCELERA_API,
+            msg = "loadBanner"
+        )
 
         scope.launch(Dispatchers.IO) {
             try {
@@ -107,38 +124,48 @@ class AcceleraAPI(
                 baseUrl.append(acceleraConfig.userId)
 
                 val url = URL(baseUrl.toString())
-                val httpURLConnection = url.openConnection() as HttpURLConnection
-                httpURLConnection.requestMethod = REQUEST_METHOD_GET
-                httpURLConnection.setRequestProperty(HEADER_AUTH_KEY, acceleraConfig.token)
-                httpURLConnection.setRequestProperty(HEADER_TYPE_KEY, HEADER_TYPE_VALUE)
-                httpURLConnection.setRequestProperty(HEADER_ACCEPT_KEY, HEADER_ACCEPT_VALUE)
-                httpURLConnection.doInput = true
-                httpURLConnection.doOutput = false
+
+                // Если URL начинается с https, то используем HttpsURLConnection
+                val urlConnection = if (acceleraConfig.url.contains(HTTPS_TEMPLATE)) {
+                    url.openConnection() as HttpsURLConnection
+                } else {
+                    url.openConnection() as HttpURLConnection
+                }
+
+                urlConnection.requestMethod = REQUEST_METHOD_GET
+                urlConnection.setRequestProperty(HEADER_AUTH_KEY, acceleraConfig.token)
+                urlConnection.setRequestProperty(HEADER_TYPE_KEY, HEADER_TYPE_VALUE)
+                urlConnection.setRequestProperty(HEADER_ACCEPT_KEY, HEADER_ACCEPT_VALUE)
+                urlConnection.doInput = true
+                urlConnection.doOutput = false
 
                 // Проверяем успешно ли установлено соединение
-                val responseCode = httpURLConnection.responseCode
+                val responseCode = urlConnection.responseCode
                 if (responseCode == HttpURLConnection.HTTP_OK) {
-                    val response = httpURLConnection.inputStream.bufferedReader().use {
+                    val response = urlConnection.inputStream.bufferedReader().use {
                         it.readText()
                     }  // по умолчанию UTF-8
 
                     // Формируем JSON файл из ответа сервера
                     val jsonObject = JSONObject(response)
-                    LogUtils.info(LOG_TAG_ACCELERA_API, "loadBanner jsonObject - $jsonObject")
+                    LogUtils.info(
+                        tag = LOG_TAG_ACCELERA_API,
+                        msg = "loadBanner jsonObject - $jsonObject"
+                    )
 
                     // Вызываем колбэк с результатом
                     completion.invoke(jsonObject)
                 } else {
                     LogUtils.error(
-                        LOG_TAG_ACCELERA_API,
-                        "Response code - $responseCode and not 200"
+                        tag = LOG_TAG_ACCELERA_API,
+                        msg = "Response code - $responseCode and not 200"
                     )
                     onError.invoke(Exception("Response code - $responseCode and not 200"))
                 }
             } catch (exception: Exception) {
                 LogUtils.error(
-                    LOG_TAG_ACCELERA_API,
-                    "loadBanner - " + exception.localizedMessage
+                    tag = LOG_TAG_ACCELERA_API,
+                    msg = "loadBanner - " + exception.localizedMessage
                 )
                 // Вызываем колбэк с ошибкой
                 onError.invoke(exception)
@@ -147,13 +174,21 @@ class AcceleraAPI(
     }
 
     private fun getJsonParamsLoadBanner(data: Map<String, Any>): String {
-        LogUtils.info(LOG_TAG_ACCELERA_API, "getJsonParamsLoadBanner data - $data")
+        LogUtils.info(
+            tag = LOG_TAG_ACCELERA_API,
+            msg = "getJsonParamsLoadBanner data - $data"
+        )
 
         // Создаем JSON с помощью JSONObject
         val jsonObject = JSONObject()
         jsonObject.put(REQUEST_JSON_ID, acceleraConfig.userId)
-        jsonObject.put(REQUEST_JSON_DATA, data)
+        val jsonMap = JSONObject(data)
+        jsonObject.put(REQUEST_JSON_DATA, jsonMap)
 
+        LogUtils.info(
+            tag = LOG_TAG_ACCELERA_API,
+            msg = "getJsonParamsLoadBanner jsonObject - $jsonObject"
+        )
         // Преобразовываем JSONObject в строку
         return jsonObject.toString()
     }
