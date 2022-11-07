@@ -1,8 +1,6 @@
-# Accelara Library
+# Accelara inApp Library (Android native)
 
-Accelara - это библиотека для работы с баннерами
-
-## Getting started
+## Конфигурация
 
 Для работы библиотеки, нужно внедрить зависимость модуля inapplib:
 ```groovy
@@ -11,7 +9,7 @@ dependencies {
 }
 ```
 
-## Usage
+## Использование
 
 Корневой класс для работы библиотеки это **AcceleraLib**
 Этот класс требует класс конфиг **AcceleraConfig**, в котором содержаться данные 
@@ -25,7 +23,10 @@ val accelera = AcceleraLib(
     )
 )
 ```
-где token - это токен авторизации запроса, url - адрес подключения к серверу и userId - идентификатор пользователя
+где: 
+- token - это токен авторизации запроса (формируется при настройке адаптера Accelera HTTP inApp Adapter), 
+- url - адрес подключения к сервису Accelera HTTP inApp Adapter
+- userId - идентификатор пользователя (тот самый ID участника, в рамках которого передаются события)
 
 Чтобы получать даннные из библиотеки, необходимо использовать интерфейс **AcceleraDelegate** 
 через метод в классе **AcceleraLib** **delegate**
@@ -34,7 +35,7 @@ val accelera = AcceleraLib(
 accelera?.delegate = WeakReference(this)
 ```
 
-Чтобы начать загрузку баннера, нужно вызвать метод **loadBanner** в классе **AcceleraLib** 
+Чтобы начать загрузку баннера (проверку доступности для клиента), нужно вызвать метод **loadBanner** в классе **AcceleraLib** 
 ```kotlin
 accelera?.loadBanner(context = this)
 ```
@@ -55,7 +56,8 @@ override fun noBannerView() {
 }
 ```
 
-Если баннера был закрыт, мы получаем колбэк в интерфейсе **AcceleraDelegate** в методе **bannerViewClosed**
+## События баннера
+Если баннер был закрыт, мы получаем колбэк в интерфейсе **AcceleraDelegate** в методе **bannerViewClosed**
 ```kotlin
 override fun bannerViewClosed(): Boolean {
     return true
