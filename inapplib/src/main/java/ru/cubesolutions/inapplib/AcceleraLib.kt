@@ -16,7 +16,9 @@ import java.lang.ref.WeakReference
  *
  * @param config конфигурация работы класса. Необходим для запросов в сеть.
  */
-class AcceleraLib(config: AcceleraConfig) : AcceleraViewDelegate, Accelera {
+class AcceleraLib(
+    config: AcceleraConfig,
+) : AcceleraViewDelegate, Accelera {
 
     companion object {
         const val JSON_STATUS = "status"
@@ -44,64 +46,79 @@ class AcceleraLib(config: AcceleraConfig) : AcceleraViewDelegate, Accelera {
     private val name = CoroutineName("in app accelera scope")
     private val scope: CoroutineScope = CoroutineScope(job + name + Dispatchers.IO)
 
-    override fun logEvent(data: Map<String, Any>) {
+    override fun logEvent(
+        data: Map<String, Any>,
+        overrideBaseUrl: String?,
+    ) {
         // TODO: cache if network is not available
-        this.api.logEvent(data = data, { jsonObject ->
-            LogUtils.info(
-                TAG_IN_APP_ACCELERA,
-                "logEvent jsonObject - $jsonObject"
-            )
-        }, { exception ->
-            LogUtils.error(
-                TAG_IN_APP_ACCELERA,
-                "logEvent exception - ${exception.localizedMessage}"
-            )
-        })
+        this.api.logEvent(
+            data = data,
+            completion = { jsonObject ->
+                LogUtils.info(
+                    TAG_IN_APP_ACCELERA,
+                    "logEvent jsonObject - $jsonObject"
+                )
+            },
+            onError = { exception ->
+                LogUtils.error(
+                    TAG_IN_APP_ACCELERA,
+                    "logEvent exception - ${exception.localizedMessage}"
+                )
+            },
+            overrideBaseUrl = overrideBaseUrl,
+        )
     }
 
-    override fun loadBanner(context: Context) {
+    override fun loadBanner(
+        context: Context,
+        overrideBaseUrl: String?,
+    ) {
         LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner")
-        this.api.loadBanner({ jsonObject ->
-            LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner jsonObject - $jsonObject")
+        this.api.loadBanner(
+            completion = { jsonObject ->
+                LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner jsonObject - $jsonObject")
 
-            // Получаем из JSON файла статус и HTML страницу
-            val statusResponse = jsonObject.optBoolean(JSON_STATUS)
-            LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner statusResponse - $statusResponse")
-            val html = jsonObject.optString(JSON_TEMPLATE)
-            LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner html - $html")
+                // Получаем из JSON файла статус и HTML страницу
+                val statusResponse = jsonObject.optBoolean(JSON_STATUS)
+                LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner statusResponse - $statusResponse")
+                val html = jsonObject.optString(JSON_TEMPLATE)
+                LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner html - $html")
 
-            // Если template пустой или status false, то считаем что баннера нет
-            if (!statusResponse || html.isNullOrEmpty()) {
-                LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner delegate noBannerView")
-                delegate?.get()?.noBannerView()
-            }
+                // Если template пустой или status false, то считаем что баннера нет
+                if (!statusResponse || html.isNullOrEmpty()) {
+                    LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner delegate noBannerView")
+                    delegate?.get()?.noBannerView()
+                }
 
-            // Получаем из JSON файла данные по тип баннера
-            val data = jsonObject.optJSONObject(JSON_DATA)
-            LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner data $data")
-            val type = data?.optString(JSON_TYPE)
-            LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner type $type")
+                // Получаем из JSON файла данные по тип баннера
+                val data = jsonObject.optJSONObject(JSON_DATA)
+                LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner data $data")
+                val type = data?.optString(JSON_TYPE)
+                LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner type $type")
 
-            // Пробуем найти из ответа сервера нужный тип баннера
-            val bt = AcceleraBannerType.from(type)
+                // Пробуем найти из ответа сервера нужный тип баннера
+                val bt = AcceleraBannerType.from(type)
 
-            // Если мы не смогли распарсить тип банера, то по умолчанию берем тип TOP
-            val bannerType = bt ?: AcceleraBannerType.TOP
+                // Если мы не смогли распарсить тип банера, то по умолчанию берем тип TOP
+                val bannerType = bt ?: AcceleraBannerType.TOP
 
-            // Все представления будут создаваться в этом потоке
-            scope.launch {
-                viewController.create(
-                    context = context,
-                    html = html,
-                    bannerType = bannerType
+                // Все представления будут создаваться в этом потоке
+                scope.launch {
+                    viewController.create(
+                        context = context,
+                        html = html,
+                        bannerType = bannerType
+                    )
+                }
+            },
+            onError = { exception ->
+                LogUtils.error(
+                    TAG_IN_APP_ACCELERA,
+                    "loadBanner exception - ${exception.localizedMessage}"
                 )
-            }
-        }, { exception ->
-            LogUtils.error(
-                TAG_IN_APP_ACCELERA,
-                "loadBanner exception - ${exception.localizedMessage}"
-            )
-        })
+            },
+            overrideBaseUrl = overrideBaseUrl,
+        )
     }
 
     override fun onReady(view: View, type: AcceleraBannerType) {

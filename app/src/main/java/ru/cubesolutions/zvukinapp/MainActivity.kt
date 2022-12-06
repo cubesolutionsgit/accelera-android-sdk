@@ -54,14 +54,17 @@ class MainActivity : AppCompatActivity(), AcceleraDelegate {
     }
 
     private fun loadBannerTest() {
-        accelera?.loadBanner(this)
+        accelera?.loadBanner(
+            context = this,
+            overrideBaseUrl = "https://flow2.accelera.ai",
+        )
     }
 
     private fun logEventTest() {
         accelera?.logEvent(
-            mapOf(
+            data = mapOf(
                 "OFFER_TYPE_CD" to "GP TopUP"
-            )
+            ),
         )
     }
 

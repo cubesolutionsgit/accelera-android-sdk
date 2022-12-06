@@ -1,5 +1,6 @@
 package ru.cubesolutions.inapplib.api
 
+import android.webkit.URLUtil
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import ru.cubesolutions.inapplib.model.AcceleraConfig
@@ -41,6 +42,7 @@ class AcceleraAPI(
         data: Map<String, Any>,
         completion: (String) -> Unit,
         onError: (Exception) -> Unit,
+        overrideBaseUrl: String? = null,
     ) {
         LogUtils.info(LOG_TAG_ACCELERA_API, "logEvent data - $data")
 
@@ -49,7 +51,15 @@ class AcceleraAPI(
                 // Создать строку JSON с параметрами
                 val jsonObjectString = getJsonParamsLoadBanner(data)
 
-                val url = URL(acceleraConfig.url + PATH_EVENTS_EVENT)
+                val baseUrl: StringBuilder = StringBuilder()
+                if (URLUtil.isValidUrl(overrideBaseUrl)) {
+                    baseUrl.append(overrideBaseUrl)
+                } else {
+                    baseUrl.append(acceleraConfig.url)
+                }
+                baseUrl.append(PATH_EVENTS_EVENT)
+
+                val url = URL(baseUrl.toString())
 
                 val urlConnection = if (acceleraConfig.url.contains(HTTPS_TEMPLATE)) {
                     url.openConnection() as HttpsURLConnection
@@ -102,6 +112,7 @@ class AcceleraAPI(
     fun loadBanner(
         completion: (JSONObject) -> Unit,
         onError: (Exception) -> Unit,
+        overrideBaseUrl: String? = null,
     ) {
         LogUtils.info(
             tag = LOG_TAG_ACCELERA_API,
@@ -111,7 +122,11 @@ class AcceleraAPI(
         scope.launch(Dispatchers.IO) {
             try {
                 val baseUrl: StringBuilder = StringBuilder()
-                baseUrl.append(acceleraConfig.url)
+                if (URLUtil.isValidUrl(overrideBaseUrl)) {
+                    baseUrl.append(overrideBaseUrl)
+                } else {
+                    baseUrl.append(acceleraConfig.url)
+                }
                 baseUrl.append(PATH_ZVUK_TEMPLATE)
                 baseUrl.append(REQUEST_QUERY_PREFIX)
                 baseUrl.append(acceleraConfig.userId)
