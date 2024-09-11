@@ -12,6 +12,6 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Zvuk Inapp"
+rootProject.name = "AcceleraSdk"
 include ':app'
-include ':inapplib'
+include ':library'
