@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1028225154085",
+    "project_id": "accelera-push-inapp-for-test",
+    "storage_bucket": "accelera-push-inapp-for-test.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1028225154085:android:b70a94919439ee260953cc",
+        "android_client_info": {
+          "package_name": "ai.accelera.test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBiEgxTFA9S0JjZdeJm0U8nQARG78Z7uSI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
