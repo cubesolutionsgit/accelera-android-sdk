@@ -7,4 +7,8 @@ package ai.accelera.library.model
  * @param url адрес подключения к серверу
  * @param userId идентификатор пользователя
  */
-data class AcceleraConfig(val token: String, val url: String, val userId: String)
+data class AcceleraConfig(
+    val token: String,
+    val url: String,
+    val userId: String?,
+)
