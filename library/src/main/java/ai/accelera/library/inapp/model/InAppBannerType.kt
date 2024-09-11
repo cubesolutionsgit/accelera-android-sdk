@@ -1,11 +1,11 @@
-package ai.accelera.library.model
+package ai.accelera.library.inapp.model
 
 /**
  * Тип баннера для отображения на экране
  *
  * @param value значение которые приходят с сервера
  */
-enum class AcceleraBannerType(val value: String) {
+enum class InAppBannerType(val value: String) {
     NOTIFICATION("notification"),
     TOP("top"),
     CENTER("center"),

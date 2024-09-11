@@ -1,15 +1,15 @@
-package ai.accelera.library.view.views
+package ai.accelera.library.inapp.view.views
 
 import android.content.Context
 import org.jsoup.nodes.Element
-import ai.accelera.library.utils.ViewUtils
+import ai.accelera.library.inapp.utils.ViewUtils
 
-class AcceleraBlock(
+class InAppImageView(
     context: Context,
     element: Element,
-) : AcceleraAbstractView(
+) : InAppAbstractView(
     element = element,
-    view = ViewUtils.getLinearLayout(
+    view = ViewUtils.getImageView(
         context = context,
         element = element
     )

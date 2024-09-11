@@ -1,38 +1,38 @@
-package ai.accelera.library.view
+package ai.accelera.library.inapp.view
 
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import org.jsoup.nodes.Element
-import ai.accelera.library.model.AcceleraBannerType
-import ai.accelera.library.parser.HTMLParser
+import ai.accelera.library.inapp.model.InAppBannerType
+import ai.accelera.library.inapp.parser.HTMLParser
 import ai.accelera.library.utils.LogUtils
-import ai.accelera.library.utils.ViewUtils
-import ai.accelera.library.view.views.AcceleraAbstractView
-import ai.accelera.library.view.views.AcceleraBlock
-import ai.accelera.library.view.views.AcceleraButton
-import ai.accelera.library.view.views.AcceleraImageView
-import ai.accelera.library.view.views.AcceleraLabel
+import ai.accelera.library.inapp.utils.ViewUtils
+import ai.accelera.library.inapp.view.views.InAppAbstractView
+import ai.accelera.library.inapp.view.views.InAppBlock
+import ai.accelera.library.inapp.view.views.InAppButton
+import ai.accelera.library.inapp.view.views.InAppImageView
+import ai.accelera.library.inapp.view.views.InAppLabel
 import java.lang.ref.WeakReference
 
-class AcceleraBannerViewController {
+class InAppBannerViewController {
 
     companion object {
         const val TAG_IN_APP_BANNER_VIEW = "IN_APP_BANNER_VIEW"
     }
 
-    var bannerType: AcceleraBannerType = AcceleraBannerType.CENTER
+    var bannerType: InAppBannerType = InAppBannerType.CENTER
 
-    var delegate: WeakReference<AcceleraViewDelegate?>? = null
+    var delegate: WeakReference<InAppViewDelegate?>? = null
 
     private var view: View? = null
 
-    private var parsingParents = mutableListOf<AcceleraAbstractView>()
-    private var topView: AcceleraAbstractView? = null
+    private var parsingParents = mutableListOf<InAppAbstractView>()
+    private var topView: InAppAbstractView? = null
 
     private var isLoading = false
 
-    fun create(context: Context, html: String, bannerType: AcceleraBannerType) {
+    fun create(context: Context, html: String, bannerType: InAppBannerType) {
         LogUtils.info(TAG_IN_APP_BANNER_VIEW, "create html - $html")
         LogUtils.info(TAG_IN_APP_BANNER_VIEW, "create bannerType - $bannerType")
 
@@ -79,13 +79,13 @@ class AcceleraBannerViewController {
         // Очистка данных в контроллере
         this.view = null
         this.parsingParents.clear()
-        this.bannerType = AcceleraBannerType.CENTER
+        this.bannerType = InAppBannerType.CENTER
     }
 
     private fun parseElement(
         context: Context,
         element: Element,
-    ): AcceleraAbstractView? {
+    ): InAppAbstractView? {
         val view = createView(context, element)
 
         view?.let {
@@ -131,7 +131,7 @@ class AcceleraBannerViewController {
         }
     }
 
-    private fun renderView(view: AcceleraAbstractView?, parent: AcceleraAbstractView?) {
+    private fun renderView(view: InAppAbstractView?, parent: InAppAbstractView?) {
         val parentView = parent?.view
         if (parentView is ViewGroup) {
             parentView.addView(view?.view)
@@ -145,49 +145,49 @@ class AcceleraBannerViewController {
     private fun createView(
         context: Context,
         element: Element,
-    ): AcceleraAbstractView? {
+    ): InAppAbstractView? {
         LogUtils.info(TAG_IN_APP_BANNER_VIEW, "createView element - $element")
 
         // Провеярем tag распарсенного элемента HTML
         when (element.tagName()) {
             "re-body" -> {
-                return AcceleraBlock(
+                return InAppBlock(
                     context = context,
                     element = element,
                 )
             }
             "re-main" -> {
-                return AcceleraBlock(
+                return InAppBlock(
                     context = context,
                     element = element,
                 )
             }
             "re-block" -> {
-                return AcceleraBlock(
+                return InAppBlock(
                     context = context,
                     element = element,
                 )
             }
             "re-heading" -> {
-                return AcceleraLabel(
+                return InAppLabel(
                     context = context,
                     element = element,
                 )
             }
             "re-text" -> {
-                return AcceleraLabel(
+                return InAppLabel(
                     context = context,
                     element = element,
                 )
             }
             "re-image" -> {
-                return AcceleraImageView(
+                return InAppImageView(
                     context = context,
                     element = element,
                 )
             }
             "re-button" -> {
-                return AcceleraButton(
+                return InAppButton(
                     context = context,
                     element = element,
                     action = {

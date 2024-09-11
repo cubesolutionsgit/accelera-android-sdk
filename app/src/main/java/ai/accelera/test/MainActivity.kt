@@ -6,14 +6,14 @@ import android.view.View
 import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import ai.accelera.library.Accelera
-import ai.accelera.library.AcceleraDelegate
-import ai.accelera.library.AcceleraLib
-import ai.accelera.library.model.AcceleraBannerType
-import ai.accelera.library.model.AcceleraConfig
+import ai.accelera.library.inapp.InApp
+import ai.accelera.library.inapp.InAppDelegate
+import ai.accelera.library.inapp.InAppImpl
+import ai.accelera.library.inapp.model.InAppBannerType
+import ai.accelera.library.AcceleraConfiguration
 import java.lang.ref.WeakReference
 
-class MainActivity : AppCompatActivity(), AcceleraDelegate {
+class MainActivity : AppCompatActivity(), InAppDelegate {
 
     companion object {
         const val TEST_TOKEN = "AhKYDMGdmFtPswrVrBHZrSnVJHdRdzjCHqVAZrXVPXFVRHfT"
@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity(), AcceleraDelegate {
         const val LOG_TAG_TEST_APP = "TAG_TEST_APP"
     }
 
-    var accelera: Accelera? = null
+    var accelera: InApp? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,8 +43,8 @@ class MainActivity : AppCompatActivity(), AcceleraDelegate {
     }
 
     private fun initLibrary() {
-        accelera = AcceleraLib(
-            config = AcceleraConfig(
+        accelera = InAppImpl(
+            config = AcceleraConfiguration(
                 token = TEST_TOKEN,
                 url = TEST_URL,
                 userId = TEST_USER_ID,
@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity(), AcceleraDelegate {
         )
     }
 
-    override fun bannerViewReady(bannerView: View, type: AcceleraBannerType) {
+    override fun bannerViewReady(bannerView: View, type: InAppBannerType) {
         Log.d(LOG_TAG_TEST_APP, "bannerViewReady")
         testDialog(bannerView)
     }

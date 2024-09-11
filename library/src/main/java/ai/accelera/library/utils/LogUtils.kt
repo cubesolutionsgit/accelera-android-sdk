@@ -11,9 +11,9 @@ object LogUtils {
         }
     }
 
-    fun error(tag: String?, msg: String) {
+    fun error(tag: String?, msg: String?) {
         if (BuildConfig.DEBUG) {
-            Log.e(tag, msg)
+            Log.e(tag, msg.orEmpty())
         }
     }
 }

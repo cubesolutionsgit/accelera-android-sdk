@@ -1,4 +1,4 @@
-package ai.accelera.library.utils
+package ai.accelera.library.inapp.utils
 
 import android.content.Context
 import android.graphics.BitmapFactory

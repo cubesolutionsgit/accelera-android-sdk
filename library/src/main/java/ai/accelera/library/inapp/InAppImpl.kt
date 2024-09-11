@@ -1,14 +1,14 @@
-package ai.accelera.library
+package ai.accelera.library.inapp
 
 import android.content.Context
 import android.view.View
 import kotlinx.coroutines.*
 import ai.accelera.library.api.AcceleraAPI
-import ai.accelera.library.model.AcceleraBannerType
-import ai.accelera.library.model.AcceleraConfig
+import ai.accelera.library.inapp.model.InAppBannerType
+import ai.accelera.library.AcceleraConfiguration
 import ai.accelera.library.utils.LogUtils
-import ai.accelera.library.view.AcceleraBannerViewController
-import ai.accelera.library.view.AcceleraViewDelegate
+import ai.accelera.library.inapp.view.InAppBannerViewController
+import ai.accelera.library.inapp.view.InAppViewDelegate
 import java.lang.ref.WeakReference
 
 /**
@@ -16,9 +16,9 @@ import java.lang.ref.WeakReference
  *
  * @param config конфигурация работы класса. Необходим для запросов в сеть.
  */
-class AcceleraLib(
-    config: AcceleraConfig,
-) : AcceleraViewDelegate, Accelera {
+class InAppImpl(
+    config: AcceleraConfiguration,
+) : InAppViewDelegate, InApp {
 
     companion object {
         const val JSON_STATUS = "status"
@@ -33,10 +33,10 @@ class AcceleraLib(
     private var api: AcceleraAPI = AcceleraAPI(acceleraConfig = config)
 
     // View контроллер, который отвечает за парсинг HTML и создания из него VIEW
-    private var viewController = AcceleraBannerViewController()
+    private var viewController = InAppBannerViewController()
 
     // Интерфейс для получения данных из Accelera
-    override var delegate: WeakReference<AcceleraDelegate?>? = null
+    override var delegate: WeakReference<InAppDelegate?>? = null
 
     init {
         viewController.delegate = WeakReference(this)
@@ -97,10 +97,10 @@ class AcceleraLib(
                 LogUtils.info(TAG_IN_APP_ACCELERA, "loadBanner type $type")
 
                 // Пробуем найти из ответа сервера нужный тип баннера
-                val bt = AcceleraBannerType.from(type)
+                val bt = InAppBannerType.from(type)
 
                 // Если мы не смогли распарсить тип банера, то по умолчанию берем тип TOP
-                val bannerType = bt ?: AcceleraBannerType.TOP
+                val bannerType = bt ?: InAppBannerType.TOP
 
                 // Все представления будут создаваться в этом потоке
                 scope.launch {
@@ -121,7 +121,7 @@ class AcceleraLib(
         )
     }
 
-    override fun onReady(view: View, type: AcceleraBannerType) {
+    override fun onReady(view: View, type: InAppBannerType) {
         LogUtils.info(TAG_IN_APP_ACCELERA, "onReady type - $type")
         scope.launch(Dispatchers.Main) {
             delegate?.get()?.bannerViewReady(bannerView = view, type = type)

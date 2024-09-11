@@ -2,7 +2,7 @@ package ai.accelera.library.api
 
 import android.webkit.URLUtil
 import org.json.JSONObject
-import ai.accelera.library.model.AcceleraConfig
+import ai.accelera.library.AcceleraConfiguration
 import ai.accelera.library.utils.LogUtils
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +15,7 @@ import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
 class AcceleraAPI(
-    private val acceleraConfig: AcceleraConfig,
+    private val acceleraConfig: AcceleraConfiguration,
 ) {
 
     companion object {

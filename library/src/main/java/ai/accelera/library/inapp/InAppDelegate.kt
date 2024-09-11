@@ -1,12 +1,12 @@
-package ai.accelera.library
+package ai.accelera.library.inapp
 
 import android.view.View
-import ai.accelera.library.model.AcceleraBannerType
+import ai.accelera.library.inapp.model.InAppBannerType
 
 /**
  * Интерфейс с колбэками из Accelera
  */
-interface AcceleraDelegate {
+interface InAppDelegate {
 
     /**
      * Баннер готов к паказу
@@ -14,7 +14,7 @@ interface AcceleraDelegate {
      * @param bannerView view для отображения баннера
      * @param type тип отображаемого баннера
      */
-    fun bannerViewReady(bannerView: View, type: AcceleraBannerType)
+    fun bannerViewReady(bannerView: View, type: InAppBannerType)
 
     /**
      * Баннера нет

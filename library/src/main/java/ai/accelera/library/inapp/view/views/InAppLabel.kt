@@ -1,13 +1,13 @@
-package ai.accelera.library.view.views
+package ai.accelera.library.inapp.view.views
 
 import android.content.Context
 import org.jsoup.nodes.Element
-import ai.accelera.library.utils.ViewUtils
+import ai.accelera.library.inapp.utils.ViewUtils
 
-class AcceleraLabel(
+class InAppLabel(
     context: Context,
     element: Element,
-) : AcceleraAbstractView(
+) : InAppAbstractView(
     element = element,
     view = ViewUtils.getTextView(
         context = context,

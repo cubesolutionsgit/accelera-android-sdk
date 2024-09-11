@@ -1,4 +1,4 @@
-package ai.accelera.library.view.views
+package ai.accelera.library.inapp.view.views
 
 import android.content.Context
 import android.graphics.Color
@@ -9,20 +9,20 @@ import android.widget.Button
 import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
 import org.jsoup.nodes.Element
-import ai.accelera.library.utils.ConstUtils.DEFAULT_BLUE_COLOR
-import ai.accelera.library.utils.ConstUtils.DEFAULT_WHITE_COLOR
-import ai.accelera.library.utils.ConstUtils.TAG_BACKGROUND_COLOR
-import ai.accelera.library.utils.ConstUtils.TAG_COLOR
-import ai.accelera.library.utils.ConstUtils.TAG_FONT_SIZE
-import ai.accelera.library.utils.ConstUtils.TAG_HREF
-import ai.accelera.library.utils.ConstUtils.TAG_MARGIN
+import ai.accelera.library.inapp.utils.ConstUtils.DEFAULT_BLUE_COLOR
+import ai.accelera.library.inapp.utils.ConstUtils.DEFAULT_WHITE_COLOR
+import ai.accelera.library.inapp.utils.ConstUtils.TAG_BACKGROUND_COLOR
+import ai.accelera.library.inapp.utils.ConstUtils.TAG_COLOR
+import ai.accelera.library.inapp.utils.ConstUtils.TAG_FONT_SIZE
+import ai.accelera.library.inapp.utils.ConstUtils.TAG_HREF
+import ai.accelera.library.inapp.utils.ConstUtils.TAG_MARGIN
 import java.util.*
 
-class AcceleraButton(
+class InAppButton(
     context: Context,
     element: Element,
     action: (String) -> Unit,
-) : AcceleraAbstractView(
+) : InAppAbstractView(
     element = element,
     view = Button(context)
 ) {

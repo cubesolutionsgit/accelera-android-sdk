@@ -1,34 +1,83 @@
 package ai.accelera.library
 
+import ai.accelera.library.utils.LogUtils
+import android.app.Activity
+import android.app.Application
 import android.content.Context
-import java.lang.ref.WeakReference
+import androidx.annotation.DrawableRes
+import androidx.annotation.MainThread
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
-/**
- * Интерфейс Accelera
- */
-interface Accelera {
+object Accelera {
 
-    var delegate: WeakReference<AcceleraDelegate?>?
+    private const val LOG_TAG_ACCELERA = "ACCELERA"
 
-    /**
-     * Залогировать событие на сервер
-     *
-     * @param data данные для отправки аналитики
-     * @param overrideBaseUrl если необходимо использовать не базовый url из конфига, можно явно указать другой адрес сервера
-     */
-    fun logEvent(
-        data: Map<String, Any>,
-        overrideBaseUrl: String? = null,
+    private val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        LogUtils.error(LOG_TAG_ACCELERA, throwable.message)
+    }
+
+    internal val acceleraScope = CoroutineScope(
+        Dispatchers.Default + SupervisorJob() + coroutineExceptionHandler,
     )
 
-    /**
-     * Начать загрузку баннера
-     *
-     * @param context контекст приложения для создания view элементов на экране
-     * @param overrideBaseUrl если необходимо использовать не базовый url из конфига, можно явно указать другой адрес сервера
-     */
-    fun loadBanner(
+    @MainThread
+    fun init(
+        application: Application,
+        configuration: AcceleraConfiguration,
+    ) {
+        initialize(application, configuration)
+    }
+
+    private fun initialize(
         context: Context,
-        overrideBaseUrl: String? = null,
-    )
+        configuration: AcceleraConfiguration,
+    ) {
+
+    }
+
+    fun updatePushToken(context: Context, token: String) {
+
+    }
+
+    /**
+     * Handles only Accelera notification message from [FirebaseMessageServise].
+     *
+     * @param context context used for Accelera initializing and push notification showing
+     * @param message the [RemoteMessage] received from Firebase or HMS
+     * @param channelId the id of channel for Accelera pushes
+     * @param channelName the name of channel for Accelera pushes
+     * @param pushSmallIcon icon for push notification as drawable resource
+     * @param channelDescription the description of channel for Accelera pushes. Default is null
+     * @param defaultActivity default activity to be opened if url was not found in [activities]
+     *
+     * @return true if notification is Mindbox push and it's successfully handled, false otherwise.
+     */
+    fun handleRemoteMessage(
+        context: Context,
+        message: Any?,
+        channelId: String,
+        channelName: String,
+        @DrawableRes pushSmallIcon: Int,
+        defaultActivity: Class<out Activity>,
+        channelDescription: String? = null,
+    ): Boolean {
+        return true
+    }
+
+    /**
+     * Creates and deliveries event of "Push delivered". Recommended call this method from
+     * background thread.
+     *
+     * Use this method only if you have custom push handling you don't use [Accelera.handleRemoteMessage].
+     * You must not call it otherwise.
+     *
+     * @param context used to initialize the main tools
+     * @param uniqKey - unique identifier of push notification
+     */
+    fun onPushReceived(context: Context, uniqKey: String) {
+
+    }
 }

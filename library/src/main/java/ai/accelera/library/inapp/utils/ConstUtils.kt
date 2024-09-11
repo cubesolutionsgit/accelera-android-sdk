@@ -1,4 +1,4 @@
-package ai.accelera.library.utils
+package ai.accelera.library.inapp.utils
 
 object ConstUtils {
 
