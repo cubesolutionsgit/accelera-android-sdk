@@ -1,5 +1,6 @@
 package ai.accelera.test
 
+import ai.accelera.library.Accelera
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -11,6 +12,7 @@ import ai.accelera.library.inapp.InAppDelegate
 import ai.accelera.library.inapp.InAppImpl
 import ai.accelera.library.inapp.model.InAppBannerType
 import ai.accelera.library.AcceleraConfiguration
+import android.content.Intent
 import java.lang.ref.WeakReference
 
 class MainActivity : AppCompatActivity(), InAppDelegate {
@@ -28,6 +30,7 @@ class MainActivity : AppCompatActivity(), InAppDelegate {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        processAcceleraIntent(intent)
 
         initLibrary()
 
@@ -40,6 +43,11 @@ class MainActivity : AppCompatActivity(), InAppDelegate {
         buttonLogEvent.setOnClickListener {
             logEventTest()
         }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        processAcceleraIntent(intent)
     }
 
     private fun initLibrary() {
@@ -92,5 +100,10 @@ class MainActivity : AppCompatActivity(), InAppDelegate {
     override fun bannerViewAction(action: String): Boolean {
         Log.d(LOG_TAG_TEST_APP, "bannerViewAction $action")
         return true
+    }
+
+    private fun processAcceleraIntent(intent: Intent?) {
+        // Добавляем событие клика по push-уведомлению
+        intent?.let { Accelera.onPushClicked(this, it) }
     }
 }

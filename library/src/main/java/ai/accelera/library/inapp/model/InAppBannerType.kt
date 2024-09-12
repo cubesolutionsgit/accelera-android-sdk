@@ -12,7 +12,7 @@ enum class InAppBannerType(val value: String) {
     FULLSCREEN("fullscreen");
 
     companion object {
-        fun from(findValue: String?) = values().firstOrNull() {
+        fun from(findValue: String?) = entries.firstOrNull() {
             it.value == findValue?.lowercase()
         }
     }

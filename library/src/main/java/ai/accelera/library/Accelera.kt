@@ -2,23 +2,27 @@ package ai.accelera.library
 
 import ai.accelera.library.api.AcceleraAPI
 import ai.accelera.library.di.AcceleraDI
-import ai.accelera.library.inapp.InAppImpl.Companion.TAG_IN_APP_ACCELERA
 import ai.accelera.library.managers.LifecycleManager
+import ai.accelera.library.pushes.PushNotificationManager
+import ai.accelera.library.utils.AcceleraFirebase
 import ai.accelera.library.utils.LogUtils
 import ai.accelera.library.utils.LoggingExceptionHandler
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import androidx.annotation.DrawableRes
 import androidx.annotation.MainThread
 import androidx.lifecycle.Lifecycle.State.RESUMED
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -193,14 +197,41 @@ object Accelera {
      */
     fun handleRemoteMessage(
         context: Context,
-        message: Any?,
+        message: RemoteMessage?,
         channelId: String,
         channelName: String,
         @DrawableRes pushSmallIcon: Int,
         defaultActivity: Class<out Activity>,
         channelDescription: String? = null,
-    ): Boolean {
-        return true
+    ): Boolean = LoggingExceptionHandler.runCatching(defaultValue = false) {
+        Timber.d(
+            "handleRemoteMessage. channelId: $channelId, " +
+                    "channelName: $channelName, channelDescription: $channelDescription, " +
+                    "defaultActivity: ${defaultActivity.simpleName}, "
+        )
+        if (message == null) {
+            Timber.d("handleRemoteMessage. Message is null.")
+            return@runCatching false
+        }
+        val convertedMessage = AcceleraFirebase.convertToAcceleraRemoteMessage(message)
+        if (convertedMessage == null) {
+            return@runCatching false
+        } else {
+            Timber.d("handleRemoteMessage. ConvertedMessage: $convertedMessage")
+        }
+
+        runBlocking(acceleraScope.coroutineContext) {
+            PushNotificationManager.handleRemoteMessage(
+                context = context,
+                remoteMessage = convertedMessage,
+                channelId = channelId,
+                channelName = channelName,
+                pushSmallIcon = pushSmallIcon,
+                channelDescription = channelDescription,
+                activities = emptyMap(),
+                defaultActivity = defaultActivity,
+            )
+        }
     }
 
     /**
@@ -214,6 +245,51 @@ object Accelera {
      * @param uniqKey - unique identifier of push notification
      */
     fun onPushReceived(context: Context, uniqKey: String) {
+
+    }
+
+    /**
+     * Creates and deliveries event of "Push clicked".
+     * Recommended to be used with Accelera SDK pushes with [handleRemoteMessage] method.
+     * Intent should contain "uniq_push_key" and "uniq_push_button_key" (optionally) in order to work correctly
+     * Recommended call this method from background thread.
+     *
+     * @param context used to initialize the main tools
+     * @param intent - intent recieved in app component
+     *
+     * @return true if Accelera SDK recognises push intent as Mindbox SDK push intent
+     *         false if Accelera SDK cannot find critical information in intent
+     */
+    fun onPushClicked(
+        context: Context,
+        intent: Intent,
+    ): Boolean = LoggingExceptionHandler.runCatching(defaultValue = false) {
+        Timber.d("onPushClicked with intent")
+        PushNotificationManager.getMessageIdFromPushIntent(intent)
+            ?.let { uniqKey ->
+                val pushButtonUniqKey = PushNotificationManager
+                    .getUniqPushButtonKeyFromPushIntent(intent)
+                onPushClicked(context, uniqKey, pushButtonUniqKey)
+                true
+            }
+            ?: false
+    }
+
+    /**
+     * Creates and deliveries event of "Push clicked". Recommended call this method from background
+     * thread.
+     *
+     * @param context used to initialize the main tools
+     * @param uniqKey - unique identifier of push notification
+     * @param buttonUniqKey - unique identifier of push notification button
+     */
+    fun onPushClicked(
+        context: Context,
+        uniqKey: String,
+        buttonUniqKey: String?,
+    ) = LoggingExceptionHandler.runCatching {
+        initComponents(context)
+        Timber.d("onPushClicked. uniqKey: $uniqKey, buttonUniqKey: $buttonUniqKey")
 
     }
 }
