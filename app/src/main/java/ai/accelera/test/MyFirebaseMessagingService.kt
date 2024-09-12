@@ -1,18 +1,14 @@
 package ai.accelera.test
 
 import ai.accelera.library.Accelera
-import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import timber.log.Timber
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
-    companion object {
-        private const val TAG = "MyFirebaseMsgService"
-    }
-
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        Log.d(TAG, "From: ${remoteMessage.from}")
+        Timber.d("onMessageReceived remoteMessage:$remoteMessage")
         // Активити по умолчанию. Откроется, если пришла ссылка, которой нет в перечислении
         val defaultActivity = MainActivity::class.java
 
@@ -33,13 +29,13 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         )
 
         if (!messageWasHandled) {
-            // Если push-уведомление было не от Mindbox или в нем некорректные данные,
+            // Если push-уведомление было не от Accelera или в нем некорректные данные,
             // то можно написать фолбек для его обработки
         }
     }
 
     override fun onNewToken(token: String) {
-        Log.d(TAG, "Refreshed token: $token")
+        Timber.d("onNewToken token:$token")
         Accelera.updatePushToken(applicationContext, token)
     }
 }

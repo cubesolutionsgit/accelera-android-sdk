@@ -3,6 +3,7 @@ package ai.accelera.test
 import ai.accelera.library.Accelera
 import ai.accelera.library.AcceleraConfiguration
 import android.app.Application
+import timber.log.Timber
 
 class MyApp : Application() {
 
@@ -20,6 +21,9 @@ class MyApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
 
         // Инициализация библиотеки
         Accelera.init(this, configuration)
