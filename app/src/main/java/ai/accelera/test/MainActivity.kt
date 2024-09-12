@@ -50,6 +50,11 @@ class MainActivity : AppCompatActivity(), InAppDelegate {
         processAcceleraIntent(intent)
     }
 
+    private fun processAcceleraIntent(intent: Intent?) {
+        // Добавляем событие клика по push-уведомлению
+        intent?.let { Accelera.onPushClicked(this, it) }
+    }
+
     private fun initLibrary() {
         accelera = InAppImpl(
             config = AcceleraConfiguration(
@@ -100,10 +105,5 @@ class MainActivity : AppCompatActivity(), InAppDelegate {
     override fun bannerViewAction(action: String): Boolean {
         Log.d(LOG_TAG_TEST_APP, "bannerViewAction $action")
         return true
-    }
-
-    private fun processAcceleraIntent(intent: Intent?) {
-        // Добавляем событие клика по push-уведомлению
-        intent?.let { Accelera.onPushClicked(this, it) }
     }
 }
