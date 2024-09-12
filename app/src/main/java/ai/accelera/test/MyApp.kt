@@ -9,7 +9,7 @@ class MyApp : Application() {
 
     companion object {
         const val TEST_TOKEN = "AhKYDMGdmFtPswrVrBHZrSnVJHdRdzjCHqVAZrXVPXFVRHfT"
-        const val TEST_URL = "https://flow2.accelera.ai"
+        const val TEST_URL = "https://g1-dev.accelera.ai"
         const val TEST_USER_ID = "bagman"
     }
 

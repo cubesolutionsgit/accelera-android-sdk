@@ -1,6 +1,8 @@
 package ai.accelera.library
 
+import ai.accelera.library.api.AcceleraAPI
 import ai.accelera.library.di.AcceleraDI
+import ai.accelera.library.inapp.InAppImpl.Companion.TAG_IN_APP_ACCELERA
 import ai.accelera.library.managers.LifecycleManager
 import ai.accelera.library.utils.LogUtils
 import ai.accelera.library.utils.LoggingExceptionHandler
@@ -47,6 +49,9 @@ object Accelera {
 
     private lateinit var lifecycleManager: LifecycleManager
 
+    // Контроллер который отправляет запросы на получение HTML и отравку логов
+    private lateinit var api: AcceleraAPI
+
     @MainThread
     fun init(
         application: Application,
@@ -73,6 +78,9 @@ object Accelera {
             if (!firstInitCall) {
                 InitializeLock.reset(InitializeLock.State.SAVE_ACCELERA_CONFIG)
             }
+
+            // Api
+            api = AcceleraAPI(acceleraConfig = configuration)
 
             initScope.launch {
                 firstInitialization(context.applicationContext, configuration)
@@ -137,6 +145,7 @@ object Accelera {
         val pushToken = withContext(acceleraScope.coroutineContext) {
             getToken()
         }
+        updatePushToken(context, pushToken)
         Timber.d("firstInitialization pushToken: $pushToken")
     }
 
@@ -151,8 +160,22 @@ object Accelera {
             .addOnFailureListener(continuation::resumeWithException)
     }
 
-    fun updatePushToken(context: Context, token: String) {
+    fun updatePushToken(context: Context, token: String?) {
+        Timber.d("updatePushToken token:$token")
+        if (token == null) {
+            return
+        }
+        if (::api.isInitialized) {
+            api.registerPush(
+                token = token,
+                completion = { jsonObject ->
 
+                },
+                onError = { exception ->
+
+                },
+            )
+        }
     }
 
     /**

@@ -13,4 +13,3 @@ internal interface AppModule :
 internal interface AppContextModule : AcceleraModule {
     val appContext: Application
 }
-

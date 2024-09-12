@@ -3,6 +3,7 @@ package ai.accelera.library.api
 import android.webkit.URLUtil
 import org.json.JSONObject
 import ai.accelera.library.AcceleraConfiguration
+import ai.accelera.library.utils.DeviceUtils
 import ai.accelera.library.utils.LogUtils
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -21,8 +22,12 @@ class AcceleraAPI(
     companion object {
         const val PATH_ZVUK_TEMPLATE = "/zvuk/template"
         const val PATH_EVENTS_EVENT = "/events/event"
+        const val PATH_FIREBASE_WEBHOOKS = "/firebase/webhooks"
         const val REQUEST_JSON_ID = "id"
+        const val REQUEST_JSON_CLIENT_ID = "client_id"
         const val REQUEST_JSON_DATA = "data"
+        const val REQUEST_JSON_CONTEXT = "context"
+        const val REQUEST_JSON_TOKEN = "token"
         const val REQUEST_METHOD_GET = "GET"
         const val REQUEST_METHOD_POST = "POST"
         const val HEADER_TYPE_KEY = "Content-Type"
@@ -62,6 +67,77 @@ class AcceleraAPI(
                     baseUrl.append(acceleraConfig.url)
                 }
                 baseUrl.append(PATH_EVENTS_EVENT)
+
+                val url = URL(baseUrl.toString())
+
+                val urlConnection = if (acceleraConfig.url.contains(HTTPS_TEMPLATE)) {
+                    url.openConnection() as HttpsURLConnection
+                } else {
+                    url.openConnection() as HttpURLConnection
+                }
+
+                urlConnection.requestMethod = REQUEST_METHOD_POST
+                urlConnection.setRequestProperty(HEADER_AUTH_KEY, acceleraConfig.token)
+                urlConnection.setRequestProperty(HEADER_TYPE_KEY, HEADER_TYPE_VALUE)
+                urlConnection.setRequestProperty(HEADER_ACCEPT_KEY, HEADER_ACCEPT_VALUE)
+                urlConnection.doInput = true
+                urlConnection.doOutput = true
+
+                // Отправляем JSON, который мы создали
+                val outputStreamWriter = OutputStreamWriter(urlConnection.outputStream)
+                outputStreamWriter.write(jsonObjectString)
+                outputStreamWriter.flush()
+
+                // Проверяем успешно ли установлено соединение
+                val responseCode = urlConnection.responseCode
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    val response = urlConnection.inputStream.bufferedReader().use {
+                        it.readText()
+                    }  // по умолчанию UTF-8
+                    LogUtils.info(
+                        tag = LOG_TAG_ACCELERA_API,
+                        msg = "logEvent response - $response"
+                    )
+
+                    // Вызываем колбэк с результатом
+                    completion.invoke(response)
+                } else {
+                    LogUtils.error(
+                        tag = LOG_TAG_ACCELERA_API,
+                        msg = "Response code - $responseCode and not 200"
+                    )
+
+                    // Вызываем колбэк с ошибкой
+                    onError.invoke(Exception("Response code - $responseCode and not 200"))
+                }
+            } catch (exception: Exception) {
+                exception.printStackTrace()
+                // Вызываем колбэк с ошибкой
+                onError.invoke(exception)
+            }
+        }
+    }
+
+    fun registerPush(
+        token: String,
+        completion: (String) -> Unit,
+        onError: (Exception) -> Unit,
+        overrideBaseUrl: String? = null,
+    ) {
+        LogUtils.info(LOG_TAG_ACCELERA_API, "registerPush token:$token")
+
+        scope.launch(Dispatchers.IO) {
+            try {
+                // Создать строку JSON с параметрами
+                val jsonObjectString = getJsonParams(token)
+
+                val baseUrl: StringBuilder = StringBuilder()
+                if (URLUtil.isValidUrl(overrideBaseUrl)) {
+                    baseUrl.append(overrideBaseUrl)
+                } else {
+                    baseUrl.append(acceleraConfig.url)
+                }
+                baseUrl.append(PATH_FIREBASE_WEBHOOKS)
 
                 val url = URL(baseUrl.toString())
 
@@ -200,6 +276,29 @@ class AcceleraAPI(
         LogUtils.info(
             tag = LOG_TAG_ACCELERA_API,
             msg = "getJsonParamsLoadBanner jsonObject - $jsonObject"
+        )
+        // Преобразовываем JSONObject в строку
+        return jsonObject.toString()
+    }
+
+    private fun getJsonParams(data: String): String {
+        LogUtils.info(
+            tag = LOG_TAG_ACCELERA_API,
+            msg = "getJsonParams data - $data"
+        )
+
+        // Создаем JSON с помощью JSONObject
+        val jsonObject = JSONObject()
+        jsonObject.put(REQUEST_JSON_CLIENT_ID, DeviceUtils.uniquePseudoID)
+        val dataMap: Map<String, Any> = mapOf(
+            REQUEST_JSON_TOKEN to data
+        )
+        val jsonMap = JSONObject(dataMap)
+        jsonObject.put(REQUEST_JSON_CONTEXT, jsonMap)
+
+        LogUtils.info(
+            tag = LOG_TAG_ACCELERA_API,
+            msg = "getJsonParams jsonObject - $jsonObject"
         )
         // Преобразовываем JSONObject в строку
         return jsonObject.toString()
