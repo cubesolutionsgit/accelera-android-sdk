@@ -1,4 +1,33 @@
-# Accelara inApp Library (Android native)
+# Accelara Library (Android native)
+
+Библиотека Accelara SDK позволяет получать пуши и отправлять ивенты события в систему Accelara
+
+Установка
+===
+
+**Шаг 1.** Добавить JitPack репозиторий в ваш build gradle файл:
+
+```gradle
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+**Шаг 2.** Добавить зависимость
+
+```gradle
+dependencies {
+    implementation 'com.github.cubesolutionsgit:accelera-android-sdk:0.3.19'
+}
+```
+
+Проверить последние версии либы можно на [JitPack](https://jitpack.io/#cubesolutionsgit/accelera-android-sdk)
+
+# InApp Library (Android native)
+
+Библиотека InApp SDK является отдельной частью общей библиотеки Accelara
 
 ## Конфигурация
 
