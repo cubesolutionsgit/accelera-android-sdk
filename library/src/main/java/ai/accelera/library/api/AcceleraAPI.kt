@@ -16,7 +16,7 @@ import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
 class AcceleraAPI(
-    private val acceleraConfig: AcceleraConfiguration,
+    var acceleraConfig: AcceleraConfiguration,
 ) {
 
     companion object {
@@ -24,10 +24,14 @@ class AcceleraAPI(
         const val PATH_EVENTS_EVENT = "/events/event"
         const val PATH_FIREBASE_WEBHOOKS = "/firebase/webhooks"
         const val REQUEST_JSON_ID = "id"
-        const val REQUEST_JSON_CLIENT_ID = "client_id"
+        const val REQUEST_JSON_CLIENT_ID = "clientId"
+        const val REQUEST_JSON_CLIENT = "client"
+        const val REQUEST_JSON_DEVICE_ID = "device_id"
+        const val REQUEST_JSON_MESSAGE_ID = "message_id"
         const val REQUEST_JSON_DATA = "data"
         const val REQUEST_JSON_CONTEXT = "context"
         const val REQUEST_JSON_TOKEN = "token"
+        const val REQUEST_JSON_EVENT = "event"
         const val REQUEST_METHOD_GET = "GET"
         const val REQUEST_METHOD_POST = "POST"
         const val HEADER_TYPE_KEY = "Content-Type"
@@ -129,7 +133,82 @@ class AcceleraAPI(
         scope.launch(Dispatchers.IO) {
             try {
                 // Создать строку JSON с параметрами
-                val jsonObjectString = getJsonParams(token)
+                val jsonObjectString = getJsonParams(token, acceleraConfig.userId)
+
+                val baseUrl: StringBuilder = StringBuilder()
+                if (URLUtil.isValidUrl(overrideBaseUrl)) {
+                    baseUrl.append(overrideBaseUrl)
+                } else {
+                    baseUrl.append(acceleraConfig.url)
+                }
+                baseUrl.append(PATH_FIREBASE_WEBHOOKS)
+
+                val url = URL(baseUrl.toString())
+
+                val urlConnection = if (acceleraConfig.url.contains(HTTPS_TEMPLATE)) {
+                    url.openConnection() as HttpsURLConnection
+                } else {
+                    url.openConnection() as HttpURLConnection
+                }
+
+                urlConnection.requestMethod = REQUEST_METHOD_POST
+                urlConnection.setRequestProperty(HEADER_AUTH_KEY, acceleraConfig.token)
+                urlConnection.setRequestProperty(HEADER_TYPE_KEY, HEADER_TYPE_VALUE)
+                urlConnection.setRequestProperty(HEADER_ACCEPT_KEY, HEADER_ACCEPT_VALUE)
+                urlConnection.doInput = true
+                urlConnection.doOutput = true
+
+                // Отправляем JSON, который мы создали
+                val outputStreamWriter = OutputStreamWriter(urlConnection.outputStream)
+                outputStreamWriter.write(jsonObjectString)
+                outputStreamWriter.flush()
+
+                // Проверяем успешно ли установлено соединение
+                val responseCode = urlConnection.responseCode
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    val response = urlConnection.inputStream.bufferedReader().use {
+                        it.readText()
+                    }  // по умолчанию UTF-8
+                    LogUtils.info(
+                        tag = LOG_TAG_ACCELERA_API,
+                        msg = "logEvent response - $response"
+                    )
+
+                    // Вызываем колбэк с результатом
+                    completion.invoke(response)
+                } else {
+                    LogUtils.error(
+                        tag = LOG_TAG_ACCELERA_API,
+                        msg = "Response code - $responseCode and not 200"
+                    )
+
+                    // Вызываем колбэк с ошибкой
+                    onError.invoke(Exception("Response code - $responseCode and not 200"))
+                }
+            } catch (exception: Exception) {
+                exception.printStackTrace()
+                // Вызываем колбэк с ошибкой
+                onError.invoke(exception)
+            }
+        }
+    }
+
+    fun registerEvent(
+        nameEvent: String,
+        messageId: String,
+        completion: (String) -> Unit,
+        onError: (Exception) -> Unit,
+        overrideBaseUrl: String? = null,
+    ) {
+        LogUtils.info(
+            LOG_TAG_ACCELERA_API,
+            "registerPush nameEvent:$nameEvent, messageId:$messageId"
+        )
+
+        scope.launch(Dispatchers.IO) {
+            try {
+                // Создать строку JSON с параметрами
+                val jsonObjectString = getJsonParamsEvent(nameEvent, messageId)
 
                 val baseUrl: StringBuilder = StringBuilder()
                 if (URLUtil.isValidUrl(overrideBaseUrl)) {
@@ -281,20 +360,55 @@ class AcceleraAPI(
         return jsonObject.toString()
     }
 
-    private fun getJsonParams(data: String): String {
+    private fun getJsonParams(token: String, userId: String?): String {
         LogUtils.info(
             tag = LOG_TAG_ACCELERA_API,
-            msg = "getJsonParams data - $data"
+            msg = "getJsonParams data - $token"
         )
 
         // Создаем JSON с помощью JSONObject
         val jsonObject = JSONObject()
-        jsonObject.put(REQUEST_JSON_CLIENT_ID, DeviceUtils.uniquePseudoID)
-        val dataMap: Map<String, Any> = mapOf(
-            REQUEST_JSON_TOKEN to data
-        )
-        val jsonMap = JSONObject(dataMap)
+
+        jsonObject.put(REQUEST_JSON_DEVICE_ID, DeviceUtils.uniquePseudoID)
+        jsonObject.put(REQUEST_JSON_EVENT, REQUEST_JSON_TOKEN)
+        val dataMap: MutableMap<String, Any> = mutableMapOf()
+        dataMap[REQUEST_JSON_TOKEN] = token
+        userId?.let {
+            val jsonObjectClient = JSONObject()
+            jsonObjectClient.put(REQUEST_JSON_CLIENT_ID, userId)
+            dataMap[REQUEST_JSON_CLIENT] = jsonObjectClient
+        }
+        val jsonMap = JSONObject(dataMap.toMap())
+
         jsonObject.put(REQUEST_JSON_CONTEXT, jsonMap)
+
+        LogUtils.info(
+            tag = LOG_TAG_ACCELERA_API,
+            msg = "getJsonParams jsonObject - $jsonObject"
+        )
+        // Преобразовываем JSONObject в строку
+        return jsonObject.toString()
+    }
+
+    private fun getJsonParamsEvent(nameEvent: String, messageId: String?): String {
+        LogUtils.info(
+            tag = LOG_TAG_ACCELERA_API,
+            msg = "getJsonParamsEvent nameEvent:$nameEvent"
+        )
+
+        // Создаем JSON с помощью JSONObject
+        val jsonObject = JSONObject()
+
+        jsonObject.put(REQUEST_JSON_DEVICE_ID, DeviceUtils.uniquePseudoID)
+        jsonObject.put(REQUEST_JSON_EVENT, nameEvent)
+        val dataMap: MutableMap<String, Any> = mutableMapOf()
+        messageId?.let {
+            dataMap[REQUEST_JSON_MESSAGE_ID] = messageId
+        }
+        if (dataMap.isNotEmpty()) {
+            val jsonMap = JSONObject(dataMap.toMap())
+            jsonObject.put(REQUEST_JSON_CONTEXT, jsonMap)
+        }
 
         LogUtils.info(
             tag = LOG_TAG_ACCELERA_API,

@@ -20,8 +20,9 @@ object AcceleraFirebase {
      **/
     fun convertToAcceleraRemoteMessage(remoteMessage: RemoteMessage?): AcceleraRemoteMessage? {
         val pushActionsType = object : TypeToken<List<PushAction>>() {}.type
+
         return AcceleraRemoteMessage(
-            messageId = remoteMessage?.messageId,
+            messageId = remoteMessage?.data?.get(FirebaseMessage.MESSAGE_ID),
             uniqueKey = remoteMessage?.data?.get(FirebaseMessage.DATA_UNIQUE_KEY) ?: "",
             title = remoteMessage?.notification?.title ?: "",
             description = remoteMessage?.notification?.title ?: "",

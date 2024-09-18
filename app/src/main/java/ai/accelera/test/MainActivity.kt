@@ -2,7 +2,6 @@ package ai.accelera.test
 
 import ai.accelera.library.Accelera
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import androidx.appcompat.app.AlertDialog
@@ -13,6 +12,7 @@ import ai.accelera.library.inapp.InAppImpl
 import ai.accelera.library.inapp.model.InAppBannerType
 import ai.accelera.library.AcceleraConfiguration
 import android.content.Intent
+import timber.log.Timber
 import java.lang.ref.WeakReference
 
 class MainActivity : AppCompatActivity(), InAppDelegate {
@@ -21,11 +21,9 @@ class MainActivity : AppCompatActivity(), InAppDelegate {
         const val TEST_TOKEN = "AhKYDMGdmFtPswrVrBHZrSnVJHdRdzjCHqVAZrXVPXFVRHfT"
         const val TEST_URL = "https://flow2.accelera.ai"
         const val TEST_USER_ID = "bagman"
-
-        const val LOG_TAG_TEST_APP = "TAG_TEST_APP"
     }
 
-    var accelera: InApp? = null
+    private var innAppLibrary: InApp? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,25 +54,25 @@ class MainActivity : AppCompatActivity(), InAppDelegate {
     }
 
     private fun initLibrary() {
-        accelera = InAppImpl(
+        innAppLibrary = InAppImpl(
             config = AcceleraConfiguration(
                 token = TEST_TOKEN,
                 url = TEST_URL,
                 userId = TEST_USER_ID,
             )
         )
-        accelera?.delegate = WeakReference(this)
+        innAppLibrary?.delegate = WeakReference(this)
     }
 
     private fun loadBannerTest() {
-        accelera?.loadBanner(
+        innAppLibrary?.loadBanner(
             context = this,
             overrideBaseUrl = "https://flow2.accelera.ai",
         )
     }
 
     private fun logEventTest() {
-        accelera?.logEvent(
+        innAppLibrary?.logEvent(
             data = mapOf(
                 "OFFER_TYPE_CD" to "GP TopUP"
             ),
@@ -82,7 +80,7 @@ class MainActivity : AppCompatActivity(), InAppDelegate {
     }
 
     override fun bannerViewReady(bannerView: View, type: InAppBannerType) {
-        Log.d(LOG_TAG_TEST_APP, "bannerViewReady")
+        Timber.d("bannerViewReady")
         testDialog(bannerView)
     }
 
@@ -94,16 +92,16 @@ class MainActivity : AppCompatActivity(), InAppDelegate {
     }
 
     override fun noBannerView() {
-        Log.d(LOG_TAG_TEST_APP, "noBannerView")
+        Timber.d("noBannerView")
     }
 
     override fun bannerViewClosed(): Boolean {
-        Log.d(LOG_TAG_TEST_APP, "bannerViewAction")
+        Timber.d("bannerViewAction")
         return true
     }
 
     override fun bannerViewAction(action: String): Boolean {
-        Log.d(LOG_TAG_TEST_APP, "bannerViewAction $action")
+        Timber.d("bannerViewAction $action")
         return true
     }
 }

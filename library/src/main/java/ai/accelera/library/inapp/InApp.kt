@@ -4,7 +4,8 @@ import android.content.Context
 import java.lang.ref.WeakReference
 
 /**
- * Интерфейс Accelera
+ * Интерфейс InApp library
+ * используется для работы с инн апп логикой
  */
 interface InApp {
 

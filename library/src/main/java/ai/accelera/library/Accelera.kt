@@ -290,6 +290,33 @@ object Accelera {
     ) = LoggingExceptionHandler.runCatching {
         initComponents(context)
         Timber.d("onPushClicked. uniqKey: $uniqKey, buttonUniqKey: $buttonUniqKey")
+        if (::api.isInitialized) {
+            api.registerEvent(
+                nameEvent = "clicked",
+                messageId = uniqKey,
+                completion = { jsonObject ->
 
+                },
+                onError = { exception ->
+
+                },
+            )
+        }
+    }
+
+    /**
+     * Обновить данные юзера
+     *
+     * @param clientId - идентификатор юзера, чтобы связать пользователя Accelera
+     * с пользователем клиентского приложения.
+     */
+    fun updateClientId(clientId: String?) {
+        if (::api.isInitialized) {
+            val data = api.acceleraConfig
+            val newData = data.copy(
+                userId = clientId,
+            )
+            api.acceleraConfig = newData
+        }
     }
 }

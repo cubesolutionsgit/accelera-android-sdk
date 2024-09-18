@@ -9,4 +9,5 @@ internal object FirebaseMessage {
     const val DATA_BUTTONS = "buttons"
     const val DATA_PUSH_CLICK_URL = "clickUrl"
     const val DATA_PAYLOAD = "payload"
+    const val MESSAGE_ID = "message_id"
 }
