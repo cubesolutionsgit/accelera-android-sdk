@@ -1,3 +1,19 @@
+//1. Add below line
+//===============================
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        mavenLocal()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.6.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.20"
+    }
+}
+//===============================
+
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
@@ -35,6 +51,20 @@ android {
     }
 }
 
+// 4. Add below line
+//===============================
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+//===============================
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
 dependencies {
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.appcompat:appcompat:1.7.0'
@@ -46,16 +76,20 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.11.0'
 }
 
-afterEvaluate{
-    publishing{
-        publications{
-            release(MavenPublication){
-                from components.release
-
-                groupId='com.github.cubesolutionsgit'
-                artifactId = 'accelera'
-                version = '0.3.16'
+// 5. Add below line
+//===============================
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.github.cubesolutionsgit'
+            artifactId = 'com-cubesolutionsgit-accelera'
+            version = '0.3.18'
+            pom {
+                description = 'First release'
             }
         }
+    }
+    repositories {
+        mavenLocal()
     }
 }
