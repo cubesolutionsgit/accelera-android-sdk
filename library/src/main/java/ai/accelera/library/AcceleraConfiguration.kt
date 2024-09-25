@@ -5,10 +5,10 @@ package ai.accelera.library
  *
  * @param token токен авторизации запроса
  * @param url адрес подключения к серверу
- * @param userId идентификатор пользователя
+ * @param userIdInApp идентификатор пользователя для inApp юзера
  */
 data class AcceleraConfiguration(
     val token: String,
     val url: String,
-    val userId: String?,
+    val userIdInApp: String?,
 )

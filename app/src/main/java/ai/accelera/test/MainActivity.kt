@@ -41,6 +41,9 @@ class MainActivity : AppCompatActivity(), InAppDelegate {
         buttonLogEvent.setOnClickListener {
             logEventTest()
         }
+
+        // Обновить данные пользователя после авторизации
+        Accelera.setUserInfo("{\"clientId\": \"123\", \"email\": \"john@example.com\"}")
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -58,7 +61,7 @@ class MainActivity : AppCompatActivity(), InAppDelegate {
             config = AcceleraConfiguration(
                 token = TEST_TOKEN,
                 url = TEST_URL,
-                userId = TEST_USER_ID,
+                userIdInApp = TEST_USER_ID,
             )
         )
         innAppLibrary?.delegate = WeakReference(this)

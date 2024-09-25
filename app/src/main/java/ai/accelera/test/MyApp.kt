@@ -16,7 +16,7 @@ class MyApp : Application() {
     private val configuration = AcceleraConfiguration(
         token = TEST_TOKEN,
         url = TEST_URL,
-        userId = TEST_USER_ID,
+        userIdInApp = TEST_USER_ID,
     )
 
     override fun onCreate() {

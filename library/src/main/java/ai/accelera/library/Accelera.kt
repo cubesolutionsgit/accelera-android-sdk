@@ -170,7 +170,7 @@ object Accelera {
             return
         }
         if (::api.isInitialized) {
-            api.registerPush(
+            api.updateUserInfo(
                 token = token,
                 completion = { jsonObject ->
 
@@ -307,16 +307,25 @@ object Accelera {
     /**
      * Обновить данные юзера
      *
-     * @param clientId - идентификатор юзера, чтобы связать пользователя Accelera
-     * с пользователем клиентского приложения.
+     * @param userInfo - кастомные данные юзера
      */
-    fun updateClientId(clientId: String?) {
+    fun setUserInfo(userInfo: String?) {
         if (::api.isInitialized) {
-            val data = api.acceleraConfig
-            val newData = data.copy(
-                userId = clientId,
-            )
-            api.acceleraConfig = newData
+            acceleraScope.launch {
+                api.customData = userInfo
+
+                val token = getToken()
+
+                api.updateUserInfo(
+                    token = token,
+                    completion = { jsonObject ->
+
+                    },
+                    onError = { exception ->
+
+                    },
+                )
+            }
         }
     }
 }

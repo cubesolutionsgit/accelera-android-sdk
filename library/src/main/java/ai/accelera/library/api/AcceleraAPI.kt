@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
@@ -17,6 +18,7 @@ import javax.net.ssl.HttpsURLConnection
 
 class AcceleraAPI(
     var acceleraConfig: AcceleraConfiguration,
+    var customData: String? = null,
 ) {
 
     companion object {
@@ -71,77 +73,6 @@ class AcceleraAPI(
                     baseUrl.append(acceleraConfig.url)
                 }
                 baseUrl.append(PATH_EVENTS_EVENT)
-
-                val url = URL(baseUrl.toString())
-
-                val urlConnection = if (acceleraConfig.url.contains(HTTPS_TEMPLATE)) {
-                    url.openConnection() as HttpsURLConnection
-                } else {
-                    url.openConnection() as HttpURLConnection
-                }
-
-                urlConnection.requestMethod = REQUEST_METHOD_POST
-                urlConnection.setRequestProperty(HEADER_AUTH_KEY, acceleraConfig.token)
-                urlConnection.setRequestProperty(HEADER_TYPE_KEY, HEADER_TYPE_VALUE)
-                urlConnection.setRequestProperty(HEADER_ACCEPT_KEY, HEADER_ACCEPT_VALUE)
-                urlConnection.doInput = true
-                urlConnection.doOutput = true
-
-                // Отправляем JSON, который мы создали
-                val outputStreamWriter = OutputStreamWriter(urlConnection.outputStream)
-                outputStreamWriter.write(jsonObjectString)
-                outputStreamWriter.flush()
-
-                // Проверяем успешно ли установлено соединение
-                val responseCode = urlConnection.responseCode
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    val response = urlConnection.inputStream.bufferedReader().use {
-                        it.readText()
-                    }  // по умолчанию UTF-8
-                    LogUtils.info(
-                        tag = LOG_TAG_ACCELERA_API,
-                        msg = "logEvent response - $response"
-                    )
-
-                    // Вызываем колбэк с результатом
-                    completion.invoke(response)
-                } else {
-                    LogUtils.error(
-                        tag = LOG_TAG_ACCELERA_API,
-                        msg = "Response code - $responseCode and not 200"
-                    )
-
-                    // Вызываем колбэк с ошибкой
-                    onError.invoke(Exception("Response code - $responseCode and not 200"))
-                }
-            } catch (exception: Exception) {
-                exception.printStackTrace()
-                // Вызываем колбэк с ошибкой
-                onError.invoke(exception)
-            }
-        }
-    }
-
-    fun registerPush(
-        token: String,
-        completion: (String) -> Unit,
-        onError: (Exception) -> Unit,
-        overrideBaseUrl: String? = null,
-    ) {
-        LogUtils.info(LOG_TAG_ACCELERA_API, "registerPush token:$token")
-
-        scope.launch(Dispatchers.IO) {
-            try {
-                // Создать строку JSON с параметрами
-                val jsonObjectString = getJsonParams(token, acceleraConfig.userId)
-
-                val baseUrl: StringBuilder = StringBuilder()
-                if (URLUtil.isValidUrl(overrideBaseUrl)) {
-                    baseUrl.append(overrideBaseUrl)
-                } else {
-                    baseUrl.append(acceleraConfig.url)
-                }
-                baseUrl.append(PATH_FIREBASE_WEBHOOKS)
 
                 val url = URL(baseUrl.toString())
 
@@ -288,7 +219,7 @@ class AcceleraAPI(
                 }
                 baseUrl.append(PATH_ZVUK_TEMPLATE)
                 baseUrl.append(REQUEST_QUERY_PREFIX)
-                baseUrl.append(acceleraConfig.userId)
+                baseUrl.append(acceleraConfig.userIdInApp)
 
                 val url = URL(baseUrl.toString())
 
@@ -348,43 +279,13 @@ class AcceleraAPI(
 
         // Создаем JSON с помощью JSONObject
         val jsonObject = JSONObject()
-        jsonObject.put(REQUEST_JSON_ID, acceleraConfig.userId)
+        jsonObject.put(REQUEST_JSON_ID, acceleraConfig.userIdInApp)
         val jsonMap = JSONObject(data)
         jsonObject.put(REQUEST_JSON_DATA, jsonMap)
 
         LogUtils.info(
             tag = LOG_TAG_ACCELERA_API,
             msg = "getJsonParamsLoadBanner jsonObject - $jsonObject"
-        )
-        // Преобразовываем JSONObject в строку
-        return jsonObject.toString()
-    }
-
-    private fun getJsonParams(token: String, userId: String?): String {
-        LogUtils.info(
-            tag = LOG_TAG_ACCELERA_API,
-            msg = "getJsonParams data - $token"
-        )
-
-        // Создаем JSON с помощью JSONObject
-        val jsonObject = JSONObject()
-
-        jsonObject.put(REQUEST_JSON_DEVICE_ID, DeviceUtils.uniquePseudoID)
-        jsonObject.put(REQUEST_JSON_EVENT, REQUEST_JSON_TOKEN)
-        val dataMap: MutableMap<String, Any> = mutableMapOf()
-        dataMap[REQUEST_JSON_TOKEN] = token
-        userId?.let {
-            val jsonObjectClient = JSONObject()
-            jsonObjectClient.put(REQUEST_JSON_CLIENT_ID, userId)
-            dataMap[REQUEST_JSON_CLIENT] = jsonObjectClient
-        }
-        val jsonMap = JSONObject(dataMap.toMap())
-
-        jsonObject.put(REQUEST_JSON_CONTEXT, jsonMap)
-
-        LogUtils.info(
-            tag = LOG_TAG_ACCELERA_API,
-            msg = "getJsonParams jsonObject - $jsonObject"
         )
         // Преобразовываем JSONObject в строку
         return jsonObject.toString()
@@ -404,6 +305,113 @@ class AcceleraAPI(
         val dataMap: MutableMap<String, Any> = mutableMapOf()
         messageId?.let {
             dataMap[REQUEST_JSON_MESSAGE_ID] = messageId
+        }
+        if (dataMap.isNotEmpty()) {
+            val jsonMap = JSONObject(dataMap.toMap())
+            jsonObject.put(REQUEST_JSON_CONTEXT, jsonMap)
+        }
+
+        LogUtils.info(
+            tag = LOG_TAG_ACCELERA_API,
+            msg = "getJsonParams jsonObject - $jsonObject"
+        )
+        // Преобразовываем JSONObject в строку
+        return jsonObject.toString()
+    }
+
+    fun updateUserInfo(
+        token: String?,
+        completion: (String) -> Unit,
+        onError: (Exception) -> Unit,
+        overrideBaseUrl: String? = null,
+    ) {
+        LogUtils.info(LOG_TAG_ACCELERA_API, "updateUserInfo token:$token")
+
+        scope.launch(Dispatchers.IO) {
+            try {
+                // Создать строку JSON с параметрами
+                val jsonObjectString = getJsonParamsUserInfo(token)
+
+                val baseUrl: StringBuilder = StringBuilder()
+                if (URLUtil.isValidUrl(overrideBaseUrl)) {
+                    baseUrl.append(overrideBaseUrl)
+                } else {
+                    baseUrl.append(acceleraConfig.url)
+                }
+                baseUrl.append(PATH_FIREBASE_WEBHOOKS)
+
+                val url = URL(baseUrl.toString())
+
+                val urlConnection = if (acceleraConfig.url.contains(HTTPS_TEMPLATE)) {
+                    url.openConnection() as HttpsURLConnection
+                } else {
+                    url.openConnection() as HttpURLConnection
+                }
+
+                urlConnection.requestMethod = REQUEST_METHOD_POST
+                urlConnection.setRequestProperty(HEADER_AUTH_KEY, acceleraConfig.token)
+                urlConnection.setRequestProperty(HEADER_TYPE_KEY, HEADER_TYPE_VALUE)
+                urlConnection.setRequestProperty(HEADER_ACCEPT_KEY, HEADER_ACCEPT_VALUE)
+                urlConnection.doInput = true
+                urlConnection.doOutput = true
+
+                // Отправляем JSON, который мы создали
+                val outputStreamWriter = OutputStreamWriter(urlConnection.outputStream)
+                outputStreamWriter.write(jsonObjectString)
+                outputStreamWriter.flush()
+
+                // Проверяем успешно ли установлено соединение
+                val responseCode = urlConnection.responseCode
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    val response = urlConnection.inputStream.bufferedReader().use {
+                        it.readText()
+                    }  // по умолчанию UTF-8
+                    LogUtils.info(
+                        tag = LOG_TAG_ACCELERA_API,
+                        msg = "logEvent response - $response"
+                    )
+
+                    // Вызываем колбэк с результатом
+                    completion.invoke(response)
+                } else {
+                    LogUtils.error(
+                        tag = LOG_TAG_ACCELERA_API,
+                        msg = "Response code - $responseCode and not 200"
+                    )
+
+                    // Вызываем колбэк с ошибкой
+                    onError.invoke(Exception("Response code - $responseCode and not 200"))
+                }
+            } catch (exception: Exception) {
+                exception.printStackTrace()
+                // Вызываем колбэк с ошибкой
+                onError.invoke(exception)
+            }
+        }
+    }
+
+    private fun getJsonParamsUserInfo(token: String?): String {
+        LogUtils.info(
+            tag = LOG_TAG_ACCELERA_API,
+            msg = "getJsonParamsUserInfo"
+        )
+
+        // Создаем JSON с помощью JSONObject
+        val jsonObject = JSONObject()
+
+        jsonObject.put(REQUEST_JSON_DEVICE_ID, DeviceUtils.uniquePseudoID)
+        jsonObject.put(REQUEST_JSON_EVENT, REQUEST_JSON_TOKEN)
+        val dataMap: MutableMap<String, Any> = mutableMapOf()
+        token?.let {
+            dataMap[REQUEST_JSON_TOKEN] = token
+        }
+        customData?.let {
+            try {
+                val jsonObjectClient = JSONObject(customData!!)
+                dataMap[REQUEST_JSON_CLIENT] = jsonObjectClient
+            } catch (exception: Exception) {
+                Timber.e(exception)
+            }
         }
         if (dataMap.isNotEmpty()) {
             val jsonMap = JSONObject(dataMap.toMap())
